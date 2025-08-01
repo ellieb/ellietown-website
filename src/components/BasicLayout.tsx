@@ -14,7 +14,7 @@ function Header() {
           </li>{" "}
           <li>
             <a href="/about">about</a>
-            <ul>
+            {/* <ul>
               <li>
                 <a href="/fun-stuff/about-me">about me</a>
               </li>
@@ -24,11 +24,11 @@ function Header() {
               <li>
                 <a href="/fun-stuff/guestbook">guestbook</a>
               </li>
-            </ul>
+            </ul> */}
           </li>{" "}
           <li>
             <a href="/my-stuff">my stuff</a>
-            <ul>
+            {/* <ul>
               <li>
                 <a href="/fun-stuff/spotify-playlists">spotify playlists</a>
               </li>
@@ -41,11 +41,11 @@ function Header() {
               <li>
                 <a href="/fun-stuff/kombucha-blog">kombucha blog</a>
               </li>
-            </ul>
+            </ul> */}
           </li>{" "}
           <li>
             <a href="/fun-stuff">fun stuff</a>
-            <ul>
+            {/* <ul>
               <li>
                 <a href="/fun-stuff/games">games</a>
               </li>
@@ -58,7 +58,7 @@ function Header() {
               <li>
                 <a href="/fun-stuff/personality-quizzes">personality quizzes</a>
               </li>
-            </ul>
+            </ul> */}
           </li>
         </ul>
       </nav>
@@ -67,7 +67,14 @@ function Header() {
 }
 
 function Sidebar() {
-  return <div className="sidebar">Sidebar</div>;
+  // TODO: Media player
+  // TODO: What I'm listening to on Spotify ATM?
+
+  return (
+    <div className="sidebar">
+      Sidebar Might be cool to add a lil media player here :P
+    </div>
+  );
 }
 
 function Footer() {
@@ -76,17 +83,7 @@ function Footer() {
       <p>
         <span className="blink">Under Construction 🚧</span>
       </p>
-      <p>&copy; 1999-2025 Ellie’s Totally Awesome Blog</p>
-      <p>
-        <img
-          src="https://www.animatedimages.org/data/media/171/animated-under-construction-image-0040.gif"
-          alt="Under Construction"
-        />
-        <img
-          src="https://www.animatedimages.org/data/media/113/animated-email-image-0008.gif"
-          alt="Email Me!"
-        />
-      </p>
+      <p>&copy; 2025 ellietown</p>
     </div>
   );
 }

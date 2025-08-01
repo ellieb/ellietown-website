@@ -113,13 +113,6 @@ body {
   padding: 0;
 }
 
-.section {
-  border: 2px var(--color-border) dotted;
-  border-radius: 10px;
-  margin: 1em;
-  padding: 1em;
-}
-
 h1 {
   text-align: center;
   color: var(--color-text);
@@ -142,24 +135,5 @@ h2 {
 @keyframes blinker {
   50% {
     opacity: 0;
-  }
-}
-
-.scrolling-text {
-  white-space: nowrap;
-  overflow: hidden;
-  animation: scroll-left 20s linear infinite;
-  padding: 8px 0;
-  font-weight: bold;
-  font-size: 18px;
-  color: var(--color-text-warning);
-}
-
-@keyframes scroll-left {
-  0% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(-100%);
   }
 }
