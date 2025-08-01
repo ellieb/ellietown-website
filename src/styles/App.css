@@ -47,6 +47,7 @@
   --color-border: #004a72;
   --color-dropdown-background: white;
   --color-dropdown-hover: #e5ebf0;
+  --color-blockquote-background: #00000010;
 
   /* Text colors */
   --color-text: #000352;
@@ -127,6 +128,13 @@ h2 {
   /* text-shadow: 2px 2px #0000ff; */
   /* <!-- https://fontsinuse.com/tags/4384/stephen-king --> */
   font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
+}
+
+blockquote {
+  background: var(--color-blockquote-background);
+  padding: 1em;
+  margin: 1em 0;
+  border-radius: 8px;
 }
 
 .blink {

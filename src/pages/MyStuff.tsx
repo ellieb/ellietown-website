@@ -8,6 +8,17 @@ function MyStuff({}) {
   return (
     <BasicLayout>
       <Section title={"What I've been listening to lately"}>
+        <blockquote>
+          Check out my{" "}
+          <a
+            href="https://stats.fm/user/ebadun?range=current_year"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            stats.fm
+          </a>{" "}
+          for a more objective overview of my listening habits 😇
+        </blockquote>
         <p>
           My latest obsession (I know it's not fall yet but the
           relaxed/melancholy mood fits the feeling of yet another summer that is
@@ -64,7 +75,7 @@ function MyStuff({}) {
         </p>
       </Section>
 
-      <Section title="Playlists">
+      {/* <Section title="Playlists">
         <p>Check out my playlists 🎶</p>
         <a href="https://open.spotify.com/playlist/4n3Ieo0y6bE0OhLhMWlV8o?si=b51887dd398a48f4">
           J'ai une ame solitaire
@@ -82,7 +93,7 @@ function MyStuff({}) {
             loading="lazy"
           ></iframe>
         </div>
-      </Section>
+      </Section> */}
 
       <Section title="Movies">
         <p>My fav movies, ok???</p>
@@ -94,6 +105,7 @@ function MyStuff({}) {
           <li>Some Like It Hot</li>
           <li>Alien</li>
           <li>Kill Bill</li>
+          <li>tbc...</li>
         </ul>
       </Section>
 
