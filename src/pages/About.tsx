@@ -2,7 +2,7 @@ import React from "react";
 import BasicLayout from "../components/BasicLayout";
 import Section from "../components/Section";
 
-function About({}) {
+function About() {
   return (
     <BasicLayout>
       <Section title={"About me"}>
@@ -77,6 +77,15 @@ function About({}) {
               rel="noopener noreferrer"
             >
               https://pixelartmaker.com/
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://fontsinuse.com/tags/4384/stephen-king/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              https://fontsinuse.com/tags/4384/stephen-king/
             </a>
           </li>
         </ul>

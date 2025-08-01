@@ -2,7 +2,7 @@ import React from "react";
 import BasicLayout from "../components/BasicLayout";
 import Section from "../components/Section";
 
-function FunStuff({}) {
+function FunStuff() {
   return (
     <BasicLayout>
       <p>Look at all this fun stuff here..</p>

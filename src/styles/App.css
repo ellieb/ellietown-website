@@ -117,16 +117,10 @@ body {
 h1 {
   text-align: center;
   color: var(--color-text);
-  /* font-size: 36px; */
-  /* text-shadow: 2px 2px #0000ff; */
-  /* <!-- https://fontsinuse.com/tags/4384/stephen-king --> */
   font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
 }
 h2 {
   color: var(--color-text);
-  /* font-size: 36px; */
-  /* text-shadow: 2px 2px #0000ff; */
-  /* <!-- https://fontsinuse.com/tags/4384/stephen-king --> */
   font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
 }
 

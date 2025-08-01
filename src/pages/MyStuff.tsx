@@ -2,9 +2,9 @@ import React from "react";
 import BasicLayout from "../components/BasicLayout";
 import Section from "../components/Section";
 
-//TODO: Persist music when browsing?
+//TODO: Persist music when browsing
 
-function MyStuff({}) {
+function MyStuff() {
   return (
     <BasicLayout>
       <Section title={"What I've been listening to lately"}>
@@ -25,6 +25,7 @@ function MyStuff({}) {
           passing me by)
         </p>
         <iframe
+          title="Spotify Playlist - Fall"
           data-testid="embed-iframe"
           style={{ borderRadius: "12px" }}
           src="https://open.spotify.com/embed/playlist/6UGW1e2oNrEgaAdwm0utUo?utm_source=generator&theme=0"
@@ -57,6 +58,7 @@ function MyStuff({}) {
           themes so much.
         </p>
         <iframe
+          title="Spotify Playlist - 90s"
           data-testid="embed-iframe"
           style={{ borderRadius: "12px" }}
           src="https://open.spotify.com/embed/playlist/3kUg48VuOaoFGI763LvdVe?utm_source=generator"
@@ -95,7 +97,7 @@ function MyStuff({}) {
         </div>
       </Section> */}
 
-      <Section title="Movies">
+      {/* <Section title="Movies">
         <p>My fav movies, ok???</p>
         <ul>
           <li>Eternal Sunshine</li>
@@ -107,7 +109,7 @@ function MyStuff({}) {
           <li>Kill Bill</li>
           <li>tbc...</li>
         </ul>
-      </Section>
+      </Section> */}
 
       {/* <div>coding projects</div> */}
       {/* <div>media I love</div> */}
