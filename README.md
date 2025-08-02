@@ -1,3 +1,5 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/4fef0c0a-6b73-4b13-b6e7-92293f23a4a3/deploy-status)](https://app.netlify.com/projects/delightful-buttercream-7ee72f/deploys)
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
