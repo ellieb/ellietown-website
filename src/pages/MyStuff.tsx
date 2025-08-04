@@ -131,6 +131,7 @@ function MyStuff() {
           {/* TODO: Talk about the Noma Guide to Fermentation */}
         </p>
       </Section>
+      {/* <Section title={"Knit and Crochet"}></Section> */}
     </BasicLayout>
   );
 }

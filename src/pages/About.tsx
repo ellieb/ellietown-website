@@ -89,6 +89,8 @@ function About() {
             </a>
           </li>
         </ul>
+        {/* https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow and all the spotify developer docs 
+        https://github.com/spotify/web-api-examples/blob/master/authorization/authorization_code_pkce/public/app.js*/}
       </Section>
 
       {/* <Section title={"Guestbook"}>

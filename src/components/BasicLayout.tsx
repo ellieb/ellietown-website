@@ -69,6 +69,7 @@ function Header() {
 function Sidebar() {
   // TODO: Media player
   // TODO: What I'm listening to on Spotify ATM?
+  // https://developer.spotify.com/documentation/web-api/howtos/web-app-profile
 
   return (
     <div className="sidebar">
