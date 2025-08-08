@@ -1,5 +1,5 @@
 .layout {
-  width: 900px;
+  max-width: 80vw;
   margin: 0.5em auto;
   display: grid;
   grid-gap: 0.5em;
@@ -30,6 +30,7 @@
 
 .main-content {
   grid-area: main;
+  min-width: 0; /* used to make overflow scrolling work somehow */
   background-color: var(--color-content-background);
   padding: 20px;
   border: var(--main-border);

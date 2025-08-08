@@ -358,9 +358,12 @@ export async function startOrResumePlayback(
     } else {
       await spotifyClient.play();
     }
-  } catch (err) {
-    console.error(err);
-    throw new Error("Issue with startOrResumePlayback");
+  } catch (err: any) {
+    const errorObject = JSON.parse(err.response);
+    console.error(errorObject);
+    throw new Error(
+      `Issue with startOrResumePlayback - ${errorObject.error.message}`
+    );
   }
 
   return;
@@ -381,9 +384,10 @@ export async function pausePlayback(accessToken: string) {
 
   try {
     await spotifyClient.pause();
-  } catch (err) {
-    console.error(err);
-    throw new Error("Issue with pausePlayback");
+  } catch (err: any) {
+    const errorObject = JSON.parse(err.response);
+    console.error(errorObject);
+    throw new Error(`Issue with pausePlayback - ${errorObject.error.message}`);
   }
 
   return;
@@ -404,9 +408,10 @@ export async function skipToNext(accessToken: string) {
 
   try {
     await spotifyClient.skipToNext();
-  } catch (err) {
-    console.error(err);
-    throw new Error("Issue with pausePlayback");
+  } catch (err: any) {
+    const errorObject = JSON.parse(err.response);
+    console.error(errorObject);
+    throw new Error(`Issue with skipToNext  - ${errorObject.error.message}`);
   }
 
   return;
@@ -419,9 +424,15 @@ export async function getCurrentlyPlayingTrack(accessToken: string) {
 
   try {
     const body = await spotifyApi.getMyCurrentPlayingTrack();
-    return body;
-  } catch (err) {
-    console.error(err);
-    throw new Error("Issue with pausePlayback");
+    return body as SpotifyApi.CurrentlyPlayingResponse &
+      Partial<{
+        item: { album: { release_date: string } };
+      }>;
+  } catch (err: any) {
+    const errorObject = JSON.parse(err.response);
+    console.error(errorObject);
+    throw new Error(
+      `Issue with getCurrentlyPlayingTrack  - ${errorObject.error.message}`
+    );
   }
 }

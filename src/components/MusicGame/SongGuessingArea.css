@@ -1,0 +1,20 @@
+.song-guessing-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.song-guessing-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  flex-wrap: nowrap; /* prevent wrapping so it scrolls horizontally */
+  gap: 8px;
+}
+
+/* Prevent children from shrinking so the row can overflow */
+.song-guessing-row > * {
+  flex: 0 0 auto;
+}

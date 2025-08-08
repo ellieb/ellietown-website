@@ -16,6 +16,7 @@ import {
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import SongCard, { TrackInformation } from "./SongCard";
+import "./SongGuessingArea.css";
 
 // Just a normal sortable item — but will only be draggable for current track
 function SortableItem({
@@ -58,14 +59,21 @@ function SortableItem({
   );
 }
 
+// TODO: Put types in extra file to prevent circular dependencies
+enum GuessState {
+  Correct,
+  Incorrect,
+  NoGuess,
+}
+
 function SongGuessingArea({
   currentTrackId,
-  isCurrentTrackHidden = true,
+  guessState,
   sortedTracks,
   setSortedTracks,
 }: {
   currentTrackId: string | null;
-  isCurrentTrackHidden?: boolean;
+  guessState: GuessState;
   sortedTracks: TrackInformation[];
   setSortedTracks: React.Dispatch<React.SetStateAction<TrackInformation[]>>;
 }) {
@@ -75,6 +83,14 @@ function SongGuessingArea({
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // TODO: Use the styled-components library to have animation locally
+  const extraClass =
+    guessState === GuessState.Correct
+      ? "backgroundAnimatedCorrect"
+      : guessState === GuessState.Incorrect
+      ? "backgroundAnimatedIncorrect"
+      : "";
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -106,26 +122,30 @@ function SongGuessingArea({
         items={sortedTracks}
         strategy={horizontalListSortingStrategy}
       >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "flex-start",
-          }}
-        >
-          {sortedTracks.map((track) => (
-            <SortableItem
-              key={track.id}
-              id={track.id}
-              draggable={track.id === currentTrackId}
-            >
-              <SongCard
-                track={track}
-                hidden={isCurrentTrackHidden && track.id === currentTrackId}
-                compact
-              />
-            </SortableItem>
-          ))}
+        <div className="song-guessing-scroll">
+          <div className="song-guessing-row">
+            {sortedTracks.map((track) => (
+              <SortableItem
+                key={track.id}
+                id={track.id}
+                draggable={track.id === currentTrackId}
+              >
+                <SongCard
+                  track={track}
+                  hidden={
+                    track.id === currentTrackId &&
+                    guessState === GuessState.NoGuess
+                  }
+                  compact={
+                    track.id === currentTrackId
+                      ? guessState === GuessState.NoGuess
+                      : true
+                  }
+                  extraClass={track.id === currentTrackId ? extraClass : ""}
+                />
+              </SortableItem>
+            ))}
+          </div>
         </div>
       </SortableContext>
     </DndContext>

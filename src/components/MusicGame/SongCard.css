@@ -1,64 +1,120 @@
-/* TODO: Use grid so the year is in the middle of all cards */
-
 .song-display {
   display: flex;
   gap: 1em;
   background-color: var(--color-content-background);
-  padding: 10px;
+  padding: 8px;
   border: 2px solid var(--color-border);
   border-radius: 10px;
   font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
   text-align: left;
-  /* margin: 0.5em 0em; */
-  justify-content: center;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.backgroundAnimatedIncorrect {
+  -o-animation: fadeIncorrect 5s ease-in-out;
+  animation: fadeIncorrect 5s ease-in-out;
+}
+
+@-o-keyframes fadeIncorrect {
+  0% {
+    background-color: #ffcfcf;
+  }
+  100% {
+    background-color: var(--color-content-background);
+  }
+}
+@keyframes fadeIncorrect {
+  0% {
+    background-color: #ffcfcf;
+  }
+  100% {
+    background-color: var(--color-content-background);
+  }
+}
+
+.backgroundAnimatedCorrect {
+  -o-animation: fadeCorrect 5s ease-in-out;
+  animation: fadeCorrect 5s ease-in-out;
+}
+
+@-o-keyframes fadeCorrect {
+  0% {
+    background-color: #e1ffe1;
+  }
+  100% {
+    background-color: var(--color-content-background);
+  }
+}
+@keyframes fadeCorrect {
+  0% {
+    background-color: #e1ffe1;
+  }
+  100% {
+    background-color: var(--color-content-background);
+  }
 }
 
 .hidden {
   background-color: black;
-  line-height: 224px;
+  line-height: 160px;
   border: 2px solid var(--color-border);
   border-radius: 10px;
-  /* margin: 0.5em 0em; */
   color: white;
   font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
   font-size: 64px;
 }
 
 .song-album-cover {
+  grid-area: album;
   border-radius: 5px;
   object-fit: contain;
-  width: 200px;
+  width: 140px;
 }
 
 .song-information {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
+  display: grid;
+  grid-template-areas:
+    "name"
+    "year"
+    "album-info";
+  grid-template-rows: 40px 60px 40px;
+  grid-template-columns: auto;
   text-align: center;
-  justify-content: space-between;
+  justify-content: center;
+  width: 200px;
 }
 
 .song-name {
-  font-size: 16px;
+  grid-area: name;
+  font-size: 12px;
   color: var(--color-text-subtitle);
   margin: 0px;
 }
 
 .song-artist {
-  font-size: 18px;
+  grid-area: artist;
+  font-size: 14px;
   color: var(--color-text);
   margin: 0px;
 }
 
 .song-album {
-  font-size: 16px;
+  grid-area: album;
+  font-size: 12px;
   font-style: italic;
   color: var(--color-text-subtitle);
   margin: 0px;
 }
 
 .song-year {
-  font-size: 64px;
+  grid-area: year;
+  font-size: 48px;
   color: var(--color-text);
   margin: 0px;
+}
+
+.song-album-info {
+  grid-area: album-info;
+  align-self: end;
 }

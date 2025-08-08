@@ -8,10 +8,17 @@ import {
   auth,
   startOrResumePlayback,
   pausePlayback,
+  skipToNext,
   getCurrentlyPlayingTrack,
   SpotifyTokenResp,
   CurrentToken,
 } from "./SpotifyHelpers";
+
+enum GuessState {
+  Correct,
+  Incorrect,
+  NoGuess,
+}
 
 function MusicGame() {
   const spotifyClientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
@@ -20,73 +27,16 @@ function MusicGame() {
   const scope = "user-modify-playback-state user-read-currently-playing";
   const [isMusicPlaying, setIsMusicPlaying] = React.useState(false);
   const [currentContextUri, setCurrentContextUri] = React.useState("");
-  const [currentTrackInfo, setCurrentTrackInfo] =
-    React.useState<TrackInformation | null>({
-      album: "Nevermind",
-      albumCoverUrl:
-        "https://i.scdn.co/image/ab67616d00001e02fdf71af87c2a4f3cbed53d65",
-      artist: "Nirvana",
-      id: "spotify:track:3oTlkzk1OtrhH8wBAduVEi",
-      name: "Smells Like Teen Spirit",
-      uri: "spotify:track:3oTlkzk1OtrhH8wBAduVEi",
-      year: 1991,
-    });
+  const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
+    null
+  );
 
-  const [sortedTracks, setSortedTracks] = React.useState<TrackInformation[]>([
-    {
-      album: "Nevermind",
-      albumCoverUrl:
-        "https://i.scdn.co/image/ab67616d00001e02fdf71af87c2a4f3cbed53d65",
-      artist: "Nirvana",
-      id: "spotify:track:3oTlkzk1OtrhH8wBAduVEi",
-      name: "Smells Like Teen Spirit",
-      uri: "spotify:track:3oTlkzk1OtrhH8wBAduVEi",
-      year: 1991,
-    },
-    {
-      id: "spotify:track:3AhXZa8sUQht0UEdBJgpGc",
-      uri: "spotify:track:3AhXZa8sUQht0UEdBJgpGc",
-      name: "Like a Rolling Stone",
-      artist: "Bob Dylan",
-      album: "Highway 61 Revisited",
-      albumCoverUrl:
-        "https://i.scdn.co/image/ab67616d00001e0241720ef0ae31e10d39e43ca2",
-      year: 1965,
-    },
-    {
-      id: "spotify:track:17zN523CEjJWBGXrUb3xex",
-      uri: "spotify:track:17zN523CEjJWBGXrUb3xex",
-      name: "Last Night I Dreamt That Somebody Loved Me - 2011 Remaster",
-      artist: "The Smiths",
-      album: "Strangeways, Here We Come",
-      albumCoverUrl:
-        "https://i.scdn.co/image/ab67616d00001e026d965be72ad1bceb7f2bd089",
-      year: 1987,
-    },
-  ]);
-
-  const itemToCurrentTrackInfo = (
-    response: any
-    // SpotifyApi.CurrentlyPlayingResponse &
-    //   Partial<{
-    //     item: { album: { release_date: string } };
-    //   }>
-  ): TrackInformation | null => {
-    const { item } = response;
-    if (!item) return null;
-
-    return {
-      id: item.uri,
-      uri: item.uri,
-      name: item.name,
-      artist: item.artists[0].name,
-      album: item.album.name,
-      albumCoverUrl: item.album.images[1].url,
-      year: item.album.release_date
-        ? new Date(item.album.release_date).getFullYear()
-        : undefined,
-    };
-  };
+  const [sortedTracks, setSortedTracks] = React.useState<TrackInformation[]>(
+    []
+  );
+  const [guessState, setGuessState] = React.useState<GuessState>(
+    GuessState.NoGuess
+  );
 
   if (!spotifyClientId) {
     throw new Error("Missing Spotify client ID");
@@ -156,11 +106,14 @@ function MusicGame() {
         playingTrack &&
         !sortedTracks.some((track) => track.id === playingTrack.id)
       ) {
-        setCurrentTrackInfo(playingTrack);
+        setCurrentTrackId(playingTrack.id);
         setSortedTracks((tracks) => [...tracks, playingTrack]);
       }
       // You can use trackInfo here or store it in state
-      console.log("Current track info:", currentTrackInfo);
+      console.log(
+        "Current track info:",
+        sortedTracks.find((track) => track.id === currentTrackId)
+      );
     }
   };
 
@@ -182,14 +135,140 @@ function MusicGame() {
       ) : (
         <button onClick={() => onPlayClickHandler(accessToken)}>Play</button>
       )}
-      {/* Guess button */}
+      <button
+        onClick={() =>
+          guessSortedTracks({
+            accessToken,
+            currentTrackId,
+            sortedTracks,
+            setSortedTracks,
+            setGuessState,
+            setCurrentTrackId,
+          })
+        }
+      >
+        Guess
+      </button>
       <SongGuessingArea
-        currentTrackId={currentTrackInfo?.id ?? null}
+        currentTrackId={currentTrackId}
         sortedTracks={sortedTracks}
         setSortedTracks={setSortedTracks}
+        guessState={guessState}
       />
     </div>
   );
+}
+
+function itemToCurrentTrackInfo(
+  response: SpotifyApi.CurrentlyPlayingResponse &
+    Partial<{
+      item: { album: { release_date: string } };
+    }>
+): TrackInformation | null {
+  const { item } = response;
+  if (!item) return null;
+
+  if (!item.album.release_date) {
+    throw new Error("No release date on track");
+  }
+
+  return {
+    id: item.uri,
+    uri: item.uri,
+    name: item.name,
+    artist: item.artists[0].name,
+    album: item.album.name,
+    albumCoverUrl: item.album.images[1].url,
+    year: new Date(item.album.release_date).getFullYear(),
+  };
+}
+
+async function playNextSong({
+  accessToken,
+  sortedTracks,
+  setGuessState,
+  setSortedTracks,
+  setCurrentTrackId,
+}: {
+  accessToken: string;
+  sortedTracks: TrackInformation[];
+  setGuessState: React.Dispatch<React.SetStateAction<GuessState>>;
+  setSortedTracks: React.Dispatch<React.SetStateAction<TrackInformation[]>>;
+  setCurrentTrackId: React.Dispatch<React.SetStateAction<string | null>>;
+}) {
+  setGuessState(GuessState.NoGuess);
+  await skipToNext(accessToken);
+  const playbackState = await getCurrentlyPlayingTrack(accessToken);
+  console.log(playbackState);
+  const playingTrack = itemToCurrentTrackInfo(playbackState);
+  if (
+    playingTrack &&
+    !sortedTracks.some((track) => track.id === playingTrack.id)
+  ) {
+    setCurrentTrackId(playingTrack.id);
+    setSortedTracks((tracks) => [...tracks, playingTrack]);
+  }
+}
+
+function areTracksSorted(sortedTracks: TrackInformation[]) {
+  for (let i = 1; i < sortedTracks.length; i++) {
+    if (sortedTracks[i - 1].year > sortedTracks[i].year) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function guessSortedTracks({
+  accessToken,
+  currentTrackId,
+  sortedTracks,
+  setSortedTracks,
+  setGuessState,
+  setCurrentTrackId,
+}: {
+  accessToken: string | null;
+  currentTrackId: string | null;
+  sortedTracks: TrackInformation[];
+  setSortedTracks: React.Dispatch<React.SetStateAction<TrackInformation[]>>;
+  setGuessState: React.Dispatch<React.SetStateAction<GuessState>>;
+  setCurrentTrackId: React.Dispatch<React.SetStateAction<string | null>>;
+}) {
+  if (!currentTrackId || !accessToken) {
+    return;
+  }
+
+  const isCorrectlySorted = areTracksSorted(sortedTracks);
+
+  // reveal SongCard
+  setGuessState(isCorrectlySorted ? GuessState.Correct : GuessState.Incorrect);
+
+  if (!isCorrectlySorted) {
+    // remove from sortedTracks
+    // TODO: Move incorrect cards to a graveyard area?
+    setTimeout(() => {
+      setSortedTracks((prevSortedTracks) => {
+        return prevSortedTracks.filter((track) => track.id !== currentTrackId);
+      });
+      playNextSong({
+        accessToken,
+        sortedTracks,
+        setGuessState,
+        setSortedTracks,
+        setCurrentTrackId,
+      });
+    }, 7500);
+  } else {
+    setTimeout(() => {
+      playNextSong({
+        accessToken,
+        sortedTracks,
+        setGuessState,
+        setSortedTracks,
+        setCurrentTrackId,
+      });
+    }, 5000);
+  }
 }
 
 export default MusicGame;
