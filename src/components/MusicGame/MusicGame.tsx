@@ -1,5 +1,7 @@
 import React from "react";
 import "./MusicGame.css";
+import SongGuessingArea from "./SongGuessingArea";
+import { TrackInformation } from "./SongCard";
 
 import {
   checkForAccessToken,
@@ -11,15 +13,6 @@ import {
   CurrentToken,
 } from "./SpotifyHelpers";
 
-type TrackInformation = {
-  uri: string; // item.uri
-  name: string; // item.name
-  artist: string; // item.artists[0].name
-  album: string; // item.album.name
-  year?: number; // Optional since we can't get release_date from simplified album
-  albumCoverUrl: string; // item.album.images[0].url
-};
-
 function MusicGame() {
   const spotifyClientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
   const contextUri = process.env.REACT_APP_DEFAULT_PLAYLIST_ID;
@@ -28,7 +21,49 @@ function MusicGame() {
   const [isMusicPlaying, setIsMusicPlaying] = React.useState(false);
   const [currentContextUri, setCurrentContextUri] = React.useState("");
   const [currentTrackInfo, setCurrentTrackInfo] =
-    React.useState<TrackInformation | null>(null);
+    React.useState<TrackInformation | null>({
+      album: "Nevermind",
+      albumCoverUrl:
+        "https://i.scdn.co/image/ab67616d00001e02fdf71af87c2a4f3cbed53d65",
+      artist: "Nirvana",
+      id: "spotify:track:3oTlkzk1OtrhH8wBAduVEi",
+      name: "Smells Like Teen Spirit",
+      uri: "spotify:track:3oTlkzk1OtrhH8wBAduVEi",
+      year: 1991,
+    });
+
+  const [sortedTracks, setSortedTracks] = React.useState<TrackInformation[]>([
+    {
+      album: "Nevermind",
+      albumCoverUrl:
+        "https://i.scdn.co/image/ab67616d00001e02fdf71af87c2a4f3cbed53d65",
+      artist: "Nirvana",
+      id: "spotify:track:3oTlkzk1OtrhH8wBAduVEi",
+      name: "Smells Like Teen Spirit",
+      uri: "spotify:track:3oTlkzk1OtrhH8wBAduVEi",
+      year: 1991,
+    },
+    {
+      id: "spotify:track:3AhXZa8sUQht0UEdBJgpGc",
+      uri: "spotify:track:3AhXZa8sUQht0UEdBJgpGc",
+      name: "Like a Rolling Stone",
+      artist: "Bob Dylan",
+      album: "Highway 61 Revisited",
+      albumCoverUrl:
+        "https://i.scdn.co/image/ab67616d00001e0241720ef0ae31e10d39e43ca2",
+      year: 1965,
+    },
+    {
+      id: "spotify:track:17zN523CEjJWBGXrUb3xex",
+      uri: "spotify:track:17zN523CEjJWBGXrUb3xex",
+      name: "Last Night I Dreamt That Somebody Loved Me - 2011 Remaster",
+      artist: "The Smiths",
+      album: "Strangeways, Here We Come",
+      albumCoverUrl:
+        "https://i.scdn.co/image/ab67616d00001e026d965be72ad1bceb7f2bd089",
+      year: 1987,
+    },
+  ]);
 
   const itemToCurrentTrackInfo = (
     response: any
@@ -41,6 +76,7 @@ function MusicGame() {
     if (!item) return null;
 
     return {
+      id: item.uri,
       uri: item.uri,
       name: item.name,
       artist: item.artists[0].name,
@@ -89,6 +125,8 @@ function MusicGame() {
     await auth(spotifyClientId, redirectUri, scope); // this will redirect to spotify
   };
 
+  const accessToken = currentToken.accessToken;
+
   const onPlayClickHandler = (accessToken: string) => {
     if (currentContextUri === contextUri) {
       startOrResumePlayback(accessToken);
@@ -97,14 +135,13 @@ function MusicGame() {
     }
 
     setIsMusicPlaying(true);
+    checkPlaybackStatus(accessToken);
   };
 
   const onPauseClickHandler = (accessToken: string) => {
     pausePlayback(accessToken);
     setIsMusicPlaying(false);
   };
-
-  const accessToken = currentToken.accessToken;
 
   const checkPlaybackStatus = async (accessToken: string) => {
     const playbackState = await getCurrentlyPlayingTrack(accessToken);
@@ -115,9 +152,15 @@ function MusicGame() {
         setCurrentContextUri(playbackState.context.uri);
       }
       const playingTrack = itemToCurrentTrackInfo(playbackState);
-      if (playingTrack) {
+      if (
+        playingTrack &&
+        !sortedTracks.some((track) => track.id === playingTrack.id)
+      ) {
         setCurrentTrackInfo(playingTrack);
-        setSortedTracks([playingTrack]);
+        setSortedTracks((tracks) => [...tracks, playingTrack]);
+      }
+      // You can use trackInfo here or store it in state
+      console.log("Current track info:", currentTrackInfo);
     }
   };
 
@@ -127,63 +170,24 @@ function MusicGame() {
     if (accessToken) checkPlaybackStatus(accessToken);
   }, [accessToken, currentToken, spotifyClientId]);
 
+  console.log({ sortedTracks });
+
   return (
-    <DndContext>
-      <div>
-        <h3>Try and sort these songs chronologically...</h3>
-        {!accessToken ? (
-          <button onClick={onAuthorizeClickHandler}>Authorize</button>
-        ) : isMusicPlaying ? (
-          <button onClick={() => onPauseClickHandler(accessToken)}>
-            Pause
-          </button>
-        ) : (
-          <button onClick={() => onPlayClickHandler(accessToken)}>Play</button>
-        )}
-        {/* Guess button */}
-        {!!currentTrackInfo && (
-          <SongDisplay track={currentTrackInfo} hidden compact />
-        )}
-      </div>
-    </DndContext>
-  );
-}
-
-function SongDisplay({
-  track,
-  compact = false,
-  hidden = false,
-}: {
-  track: TrackInformation;
-  compact?: boolean;
-  hidden?: boolean;
-}) {
-  const { name, artist, album, year, albumCoverUrl } = track;
-  const dimensions = compact
-    ? { height: "224px", width: "224px" }
-    : { height: "224px", width: "448px" };
-
-  return hidden ? (
-    <div className="hidden" style={dimensions}>
-      ????
-    </div>
-  ) : (
-    <div className="song-display" style={dimensions}>
-      {!compact && (
-        <img
-          className="song-album-cover"
-          src={albumCoverUrl}
-          alt="album cover"
-        />
+    <div>
+      <h3>Try and sort these songs chronologically...</h3>
+      {!accessToken ? (
+        <button onClick={onAuthorizeClickHandler}>Authorize</button>
+      ) : isMusicPlaying ? (
+        <button onClick={() => onPauseClickHandler(accessToken)}>Pause</button>
+      ) : (
+        <button onClick={() => onPlayClickHandler(accessToken)}>Play</button>
       )}
-      <div className="song-information">
-        <p className="song-name">{name}</p>
-        <p className="song-year">{year}</p>
-        <div>
-          <p className="song-artist">{artist}</p>
-          <p className="song-album">{album}</p>
-        </div>
-      </div>
+      {/* Guess button */}
+      <SongGuessingArea
+        currentTrackId={currentTrackInfo?.id ?? null}
+        sortedTracks={sortedTracks}
+        setSortedTracks={setSortedTracks}
+      />
     </div>
   );
 }

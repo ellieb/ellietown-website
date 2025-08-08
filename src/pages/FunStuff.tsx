@@ -1,6 +1,6 @@
 import React from "react";
 import BasicLayout from "../components/BasicLayout";
-import MusicGame from "../components/MusicGame";
+import MusicGame from "../components/MusicGame/MusicGame";
 
 function FunStuff() {
   return (

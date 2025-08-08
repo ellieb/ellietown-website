@@ -1,12 +1,4 @@
-* {
-  box-sizing: border-box;
-}
-
-.ordered-songs {
-  display: flex;
-  gap: 1em;
-  flex-direction: row;
-}
+/* TODO: Use grid so the year is in the middle of all cards */
 
 .song-display {
   display: flex;
@@ -17,20 +9,19 @@
   border-radius: 10px;
   font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
   text-align: left;
-  margin: 0.5em 0em;
+  /* margin: 0.5em 0em; */
   justify-content: center;
 }
 
 .hidden {
   background-color: black;
   line-height: 224px;
-  z-index: 4;
   border: 2px solid var(--color-border);
   border-radius: 10px;
-  margin: 0.5em 0em;
+  /* margin: 0.5em 0em; */
   color: white;
   font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
-  font-size: 80px;
+  font-size: 64px;
 }
 
 .song-album-cover {
