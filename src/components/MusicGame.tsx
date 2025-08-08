@@ -1,4 +1,5 @@
 import React from "react";
+import "./MusicGame.css";
 
 import {
   checkForAccessToken,
@@ -10,12 +11,46 @@ import {
   CurrentToken,
 } from "./SpotifyHelpers";
 
+type TrackInformation = {
+  uri: string; // item.uri
+  name: string; // item.name
+  artist: string; // item.artists[0].name
+  album: string; // item.album.name
+  year?: number; // Optional since we can't get release_date from simplified album
+  albumCoverUrl: string; // item.album.images[0].url
+};
+
 function MusicGame() {
   const spotifyClientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
   const contextUri = process.env.REACT_APP_DEFAULT_PLAYLIST_ID;
   const redirectUri = "http://127.0.0.1:3000/fun-stuff";
   const scope = "user-modify-playback-state user-read-currently-playing";
   const [isMusicPlaying, setIsMusicPlaying] = React.useState(false);
+  const [currentContextUri, setCurrentContextUri] = React.useState("");
+  const [currentTrackInfo, setCurrentTrackInfo] =
+    React.useState<TrackInformation | null>(null);
+
+  const itemToCurrentTrackInfo = (
+    response: any
+    // SpotifyApi.CurrentlyPlayingResponse &
+    //   Partial<{
+    //     item: { album: { release_date: string } };
+    //   }>
+  ): TrackInformation | null => {
+    const { item } = response;
+    if (!item) return null;
+
+    return {
+      uri: item.uri,
+      name: item.name,
+      artist: item.artists[0].name,
+      album: item.album.name,
+      albumCoverUrl: item.album.images[1].url,
+      year: item.album.release_date
+        ? new Date(item.album.release_date).getFullYear()
+        : undefined,
+    };
+  };
 
   if (!spotifyClientId) {
     throw new Error("Missing Spotify client ID");
@@ -55,7 +90,12 @@ function MusicGame() {
   };
 
   const onPlayClickHandler = (accessToken: string) => {
-    startOrResumePlayback(accessToken, contextUri);
+    if (currentContextUri === contextUri) {
+      startOrResumePlayback(accessToken);
+    } else {
+      startOrResumePlayback(accessToken, contextUri);
+    }
+
     setIsMusicPlaying(true);
   };
 
@@ -69,7 +109,16 @@ function MusicGame() {
   const checkPlaybackStatus = async (accessToken: string) => {
     const playbackState = await getCurrentlyPlayingTrack(accessToken);
     console.log(playbackState);
-    setIsMusicPlaying(playbackState.is_playing);
+    if (playbackState) {
+      setIsMusicPlaying(playbackState.is_playing);
+      if (playbackState.context?.uri) {
+        setCurrentContextUri(playbackState.context.uri);
+      }
+      const playingTrack = itemToCurrentTrackInfo(playbackState);
+      if (playingTrack) {
+        setCurrentTrackInfo(playingTrack);
+        setSortedTracks([playingTrack]);
+    }
   };
 
   React.useEffect(() => {
@@ -79,15 +128,62 @@ function MusicGame() {
   }, [accessToken, currentToken, spotifyClientId]);
 
   return (
-    <div>
-      <h3>Try and sort these songs chronologically...</h3>
-      {!accessToken ? (
-        <button onClick={onAuthorizeClickHandler}>Authorize</button>
-      ) : isMusicPlaying ? (
-        <button onClick={() => onPauseClickHandler(accessToken)}>Pause</button>
-      ) : (
-        <button onClick={() => onPlayClickHandler(accessToken)}>Play</button>
+    <DndContext>
+      <div>
+        <h3>Try and sort these songs chronologically...</h3>
+        {!accessToken ? (
+          <button onClick={onAuthorizeClickHandler}>Authorize</button>
+        ) : isMusicPlaying ? (
+          <button onClick={() => onPauseClickHandler(accessToken)}>
+            Pause
+          </button>
+        ) : (
+          <button onClick={() => onPlayClickHandler(accessToken)}>Play</button>
+        )}
+        {/* Guess button */}
+        {!!currentTrackInfo && (
+          <SongDisplay track={currentTrackInfo} hidden compact />
+        )}
+      </div>
+    </DndContext>
+  );
+}
+
+function SongDisplay({
+  track,
+  compact = false,
+  hidden = false,
+}: {
+  track: TrackInformation;
+  compact?: boolean;
+  hidden?: boolean;
+}) {
+  const { name, artist, album, year, albumCoverUrl } = track;
+  const dimensions = compact
+    ? { height: "224px", width: "224px" }
+    : { height: "224px", width: "448px" };
+
+  return hidden ? (
+    <div className="hidden" style={dimensions}>
+      ????
+    </div>
+  ) : (
+    <div className="song-display" style={dimensions}>
+      {!compact && (
+        <img
+          className="song-album-cover"
+          src={albumCoverUrl}
+          alt="album cover"
+        />
       )}
+      <div className="song-information">
+        <p className="song-name">{name}</p>
+        <p className="song-year">{year}</p>
+        <div>
+          <p className="song-artist">{artist}</p>
+          <p className="song-album">{album}</p>
+        </div>
+      </div>
     </div>
   );
 }

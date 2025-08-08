@@ -1,4 +1,4 @@
-// TODO: use spotify-api.js library
+import SpotifyWebApi from "spotify-web-api-js";
 
 /**
  * Authentication helpers
@@ -40,6 +40,159 @@ export type CurrentToken = {
   readonly expiresAt: string | null;
   save: (response: SpotifyTokenResp) => void;
 };
+
+// Data structure to manage Spotify client instances
+export interface SpotifyClientConfig {
+  clientID: string;
+  redirectURL: string;
+  scope?: string;
+}
+
+export interface SpotifyClientInstance {
+  client: SpotifyWebApi.SpotifyWebApiJs;
+  config: SpotifyClientConfig;
+  isAuthenticated: boolean;
+  lastUsed: Date;
+}
+
+// Global client cache to avoid creating multiple instances
+const clientCache = new Map<string, SpotifyClientInstance>();
+
+/**
+ * Get or create a Spotify client instance
+ * @param config - Spotify client configuration
+ * @param accessToken - Access token for immediate authentication
+ * @returns Promise<SpotifyClientInstance>
+ */
+export async function getOrCreateSpotifyClient(
+  config: SpotifyClientConfig,
+  accessToken: string
+): Promise<SpotifyClientInstance> {
+  const cacheKey = `${config.clientID}-${config.redirectURL}`;
+
+  // Check if we have a cached instance
+  const cachedInstance = clientCache.get(cacheKey);
+  if (cachedInstance) {
+    // Update last used timestamp
+    cachedInstance.lastUsed = new Date();
+
+    // If we have a new access token, update the client
+    if (accessToken && !cachedInstance.isAuthenticated) {
+      try {
+        // Update the token directly
+        cachedInstance.client.setAccessToken(accessToken);
+        cachedInstance.isAuthenticated = true;
+      } catch (error: any) {
+        console.error("Failed to authenticate cached client:", error);
+        // Remove failed instance from cache
+        clientCache.delete(cacheKey);
+      }
+    }
+
+    return cachedInstance;
+  }
+
+  // Create new client instance
+  try {
+    const client = new SpotifyWebApi();
+    client.setAccessToken(accessToken);
+
+    const instance: SpotifyClientInstance = {
+      client,
+      config,
+      isAuthenticated: !!accessToken,
+      lastUsed: new Date(),
+    };
+
+    // Cache the new instance
+    clientCache.set(cacheKey, instance);
+
+    return instance;
+  } catch (error) {
+    console.error("Failed to create Spotify client:", error);
+    throw new Error(`Failed to create Spotify client: ${error}`);
+  }
+}
+
+/**
+ * Authenticate a Spotify client using authorization code (PKCE flow)
+ * @param clientInstance - Spotify client instance
+ * @param authCode - Authorization code from Spotify redirect
+ * @returns Promise<boolean> - True if authentication successful
+ */
+export async function authenticateSpotifyClient(
+  clientInstance: SpotifyClientInstance,
+  authCode: string
+): Promise<boolean> {
+  try {
+    // Use the existing PKCE token exchange function
+    const token = await getToken(
+      authCode,
+      clientInstance.config.clientID,
+      clientInstance.config.redirectURL
+    );
+
+    // Update the client token
+    clientInstance.client.setAccessToken(token.access_token);
+    clientInstance.isAuthenticated = true;
+    clientInstance.lastUsed = new Date();
+    return true;
+  } catch (error: any) {
+    console.error("Failed to authenticate Spotify client:", error);
+    return false;
+  }
+}
+
+/**
+ * Refresh authentication for a Spotify client (PKCE flow)
+ * @param clientInstance - Spotify client instance
+ * @param refreshTokenValue - Refresh token
+ * @returns Promise<boolean> - True if refresh successful
+ */
+export async function refreshSpotifyClient(
+  clientInstance: SpotifyClientInstance,
+  refreshTokenValue: string
+): Promise<boolean> {
+  try {
+    // Use the existing refresh token function
+    const token = await refreshToken(clientInstance.config.clientID, {
+      accessToken: null,
+      refreshToken: refreshTokenValue,
+      expiresIn: null,
+      expiresAt: null,
+      save: () => {}, // We'll handle the save manually
+    });
+
+    // Update the client token
+    clientInstance.client.setAccessToken(token.access_token);
+    clientInstance.isAuthenticated = true;
+    clientInstance.lastUsed = new Date();
+    return true;
+  } catch (error: any) {
+    console.error("Failed to refresh Spotify client:", error);
+    return false;
+  }
+}
+
+/**
+ * Clean up expired client instances (older than 1 hour)
+ */
+export function cleanupExpiredClients(): void {
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+  for (const [key, instance] of clientCache.entries()) {
+    if (instance.lastUsed < oneHourAgo) {
+      clientCache.delete(key);
+    }
+  }
+}
+
+/**
+ * Get all cached client instances (for debugging)
+ */
+export function getCachedClients(): Map<string, SpotifyClientInstance> {
+  return new Map(clientCache);
+}
 
 const getToken = async (
   code: string,
@@ -159,8 +312,6 @@ export const auth = async (
   redirectUri: string,
   scope: string
 ) => {
-  const authUrl = new URL("https://accounts.spotify.com/authorize");
-
   const codeVerifier = generateRandomString(64);
   const hashed = await sha256(codeVerifier);
   const codeChallenge = base64encode(hashed);
@@ -175,6 +326,7 @@ export const auth = async (
     code_challenge: codeChallenge,
     redirect_uri: redirectUri,
   };
+  const authUrl = new URL("https://accounts.spotify.com/authorize");
   authUrl.search = new URLSearchParams(params).toString();
 
   // redirect to spotify auth page
@@ -185,51 +337,31 @@ export const auth = async (
  * API wrappers
  */
 
-async function baseAPIFunction({
-  accessToken,
-  url,
-  method,
-  headers,
-  body,
-}: {
-  accessToken: string;
-  url: string;
-  method: "GET" | "PUT" | "POST";
-  headers?: object;
-  body?: BodyInit | null;
-}) {
-  const payload = {
-    method,
-    headers: {
-      Authorization: "Bearer " + accessToken,
-      ...headers,
-    },
-    ...(!!body && { body: body }),
-  };
-
-  const response = await fetch(url, payload);
-
-  if (response.status !== 204 && response.status !== 200) {
-    const body = await response.json();
-    throw new Error(body.error.message);
-  }
-
-  return response;
-}
-
 // https://developer.spotify.com/documentation/web-api/reference/start-a-users-playback
 export async function startOrResumePlayback(
   accessToken: string,
   contextUri?: string
 ) {
-  // TODO: Add other params (device_id, uris, offset, etc)
-  await baseAPIFunction({
-    accessToken,
-    url: "https://api.spotify.com/v1/me/player/play",
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-    body: contextUri ? JSON.stringify({ context_uri: contextUri }) : null,
-  });
+  const spotifyClient = (
+    await getOrCreateSpotifyClient(
+      {
+        clientID: process.env.REACT_APP_SPOTIFY_CLIENT_ID || "",
+        redirectURL: "http://127.0.0.1:3000/fun-stuff",
+      },
+      accessToken
+    )
+  ).client;
+
+  try {
+    if (contextUri) {
+      await spotifyClient.play({ context_uri: contextUri });
+    } else {
+      await spotifyClient.play();
+    }
+  } catch (err) {
+    console.error(err);
+    throw new Error("Issue with startOrResumePlayback");
+  }
 
   return;
 }
@@ -237,11 +369,22 @@ export async function startOrResumePlayback(
 // https://developer.spotify.com/documentation/web-api/reference/pause-a-users-playback
 export async function pausePlayback(accessToken: string) {
   // TODO: Add other params (device_id)
-  await baseAPIFunction({
-    accessToken,
-    url: "https://api.spotify.com/v1/me/player/pause",
-    method: "PUT",
-  });
+  const spotifyClient = (
+    await getOrCreateSpotifyClient(
+      {
+        clientID: process.env.REACT_APP_SPOTIFY_CLIENT_ID || "",
+        redirectURL: "http://127.0.0.1:3000/fun-stuff",
+      },
+      accessToken
+    )
+  ).client;
+
+  try {
+    await spotifyClient.pause();
+  } catch (err) {
+    console.error(err);
+    throw new Error("Issue with pausePlayback");
+  }
 
   return;
 }
@@ -249,45 +392,36 @@ export async function pausePlayback(accessToken: string) {
 // https://developer.spotify.com/documentation/web-api/reference/skip-users-playback-to-next-track
 export async function skipToNext(accessToken: string) {
   // TODO: Add other params (device_id)
-  await baseAPIFunction({
-    accessToken,
-    url: "https://api.spotify.com/v1/me/player/next",
-    method: "POST",
-  });
+  const spotifyClient = (
+    await getOrCreateSpotifyClient(
+      {
+        clientID: process.env.REACT_APP_SPOTIFY_CLIENT_ID || "",
+        redirectURL: "http://127.0.0.1:3000/fun-stuff",
+      },
+      accessToken
+    )
+  ).client;
+
+  try {
+    await spotifyClient.skipToNext();
+  } catch (err) {
+    console.error(err);
+    throw new Error("Issue with pausePlayback");
+  }
 
   return;
 }
 
 // https://developer.spotify.com/documentation/web-api/reference/get-the-users-currently-playing-track
 export async function getCurrentlyPlayingTrack(accessToken: string) {
-  // TODO: Add other params (device_id)
-  const response = await baseAPIFunction({
-    accessToken,
-    url: "https://api.spotify.com/v1/me/player/currently-playing",
-    method: "GET",
-  });
+  var spotifyApi = new SpotifyWebApi();
+  spotifyApi.setAccessToken(accessToken);
 
-  const body = await response.json();
-
-  return body;
-}
-
-// https://developer.spotify.com/documentation/web-api/reference/get-information-about-the-users-current-playback
-export async function getPlaybackState(
-  accessToken: string,
-  market: string = "ES"
-) {
-  const url = new URL("https://api.spotify.com/v1/me/player");
-  const params = new URLSearchParams(url.search);
-  params.append("market", market);
-
-  const response = await baseAPIFunction({
-    accessToken,
-    url: url.toString(),
-    method: "GET",
-  });
-
-  const body = response.json();
-
-  return body;
+  try {
+    const body = await spotifyApi.getMyCurrentPlayingTrack();
+    return body;
+  } catch (err) {
+    console.error(err);
+    throw new Error("Issue with pausePlayback");
+  }
 }

@@ -1,0 +1,73 @@
+* {
+  box-sizing: border-box;
+}
+
+.ordered-songs {
+  display: flex;
+  gap: 1em;
+  flex-direction: row;
+}
+
+.song-display {
+  display: flex;
+  gap: 1em;
+  background-color: var(--color-content-background);
+  padding: 10px;
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
+  text-align: left;
+  margin: 0.5em 0em;
+  justify-content: center;
+}
+
+.hidden {
+  background-color: black;
+  line-height: 224px;
+  z-index: 4;
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  margin: 0.5em 0em;
+  color: white;
+  font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
+  font-size: 80px;
+}
+
+.song-album-cover {
+  border-radius: 5px;
+  object-fit: contain;
+  width: 200px;
+}
+
+.song-information {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  text-align: center;
+  justify-content: space-between;
+}
+
+.song-name {
+  font-size: 16px;
+  color: var(--color-text-subtitle);
+  margin: 0px;
+}
+
+.song-artist {
+  font-size: 18px;
+  color: var(--color-text);
+  margin: 0px;
+}
+
+.song-album {
+  font-size: 16px;
+  font-style: italic;
+  color: var(--color-text-subtitle);
+  margin: 0px;
+}
+
+.song-year {
+  font-size: 64px;
+  color: var(--color-text);
+  margin: 0px;
+}
