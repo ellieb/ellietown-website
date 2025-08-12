@@ -1,23 +1,106 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./WebPlayback.css";
-import { togglePlaybackShuffle, transferPlayback } from "./SpotifyHelpers";
+import {
+  togglePlaybackShuffle,
+  transferPlayback,
+  getCurrentlyPlayingTrack,
+  startOrResumePlayback,
+} from "./SpotifyHelpers";
+import { TrackInformation } from "./SongCard";
 
 // TODO: Add volume toggle
 
+// Ways we get to a new song
+// 1. Skip
+// 2. Guess
+// 3. Song ends and next begins
+
 function WebPlayback({
   token,
-  currentTrackId,
+  sortedTracks,
   contextUri,
+  setCurrentTrackId,
+  setSortedTracks,
+  onGuess,
 }: {
   token: string;
-  currentTrackId: string | null;
+  sortedTracks: TrackInformation[];
   contextUri: string;
+  setCurrentTrackId: React.Dispatch<React.SetStateAction<string | null>>;
+  setSortedTracks: React.Dispatch<React.SetStateAction<TrackInformation[]>>;
+  onGuess: (callback: () => void) => Promise<void>;
 }) {
   const [player, setPlayer] = useState<Spotify.Player | undefined>(undefined);
   const [isPaused, setIsPaused] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [currentContextUri, setCurrentContextUri] = useState("");
   const [deviceId, setDeviceId] = useState("");
+
+  // Ref to track the last track URI to prevent duplicates
+  const lastTrackUriRef = useRef<string | null>(null);
+  // Ref to store the timeout for debouncing track addition
+  const trackAdditionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Ref to track if component is mounted
+  const isMountedRef = useRef(true);
+
+  // Helper function to add tracks with debouncing and full information
+  const addTrackToSortedTracks = async (trackUri: string) => {
+    // Don't add tracks if component is unmounting
+    if (!isMountedRef.current) return;
+
+    // Clear any existing timeout
+    if (trackAdditionTimeoutRef.current) {
+      clearTimeout(trackAdditionTimeoutRef.current);
+    }
+
+    // Set a new timeout to debounce track addition
+    trackAdditionTimeoutRef.current = setTimeout(async () => {
+      // Double-check if component is still mounted
+      if (!isMountedRef.current) return;
+
+      try {
+        // Fetch full track information including release year
+        const playbackState = await getCurrentlyPlayingTrack(token);
+
+        if (playbackState?.item && playbackState.item.uri === trackUri) {
+          const track = playbackState.item;
+
+          // Create track info with full details including release year
+          const trackInfo: TrackInformation = {
+            id: track.uri,
+            uri: track.uri,
+            name: track.name,
+            artist: track.artists[0].name,
+            album: track.album.name,
+            albumCoverUrl:
+              track.album.images && track.album.images.length > 0
+                ? track.album.images[1]?.url || track.album.images[0]?.url || ""
+                : "",
+            year: track.album.release_date
+              ? new Date(track.album.release_date).getFullYear()
+              : new Date().getFullYear(),
+          };
+
+          // Check if track already exists to prevent duplicates
+          if (
+            !sortedTracks.some(
+              (existingTrack) => existingTrack.id === trackInfo.id
+            )
+          ) {
+            setSortedTracks((prevTracks) => [...prevTracks, trackInfo]);
+            console.log("Added new track to sortedTracks:", trackInfo);
+          } else {
+            console.log(
+              "Track already exists in sortedTracks:",
+              trackInfo.name
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching full track information:", error);
+      }
+    }, 1000); // 1 second debounce
+  };
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -80,6 +163,35 @@ function WebPlayback({
 
           // Set loading to false since we're now ready
           setIsLoading(false);
+
+          // Handle initial track if it exists and it is in the correct context
+          if (
+            state.track_window.current_track &&
+            state.context.uri === contextUri
+          ) {
+            const initialTrack = state.track_window.current_track;
+
+            // Validate that we have a proper track with required fields
+            if (
+              initialTrack.uri &&
+              initialTrack.name &&
+              initialTrack.artists &&
+              initialTrack.album
+            ) {
+              setCurrentTrackId(initialTrack.uri);
+              lastTrackUriRef.current = initialTrack.uri;
+
+              // Add the initial track to sortedTracks
+              addTrackToSortedTracks(initialTrack.uri);
+
+              console.log("Initial track detected:", initialTrack.name);
+            } else {
+              console.warn(
+                "Incomplete initial track information:",
+                initialTrack
+              );
+            }
+          }
         });
       });
 
@@ -87,20 +199,59 @@ function WebPlayback({
         console.log("Device ID has gone offline", device_id);
       });
 
-      player.addListener(
-        "player_state_changed",
-        async ({ paused, context }) => {
-          setIsPaused(paused);
+      player.addListener("player_state_changed", async (props) => {
+        if (!props) {
+          return;
+        }
 
-          if (!!context.uri) {
-            setCurrentContextUri(context.uri);
+        const { track_window, loading, paused, context } = props;
+        setIsPaused(paused);
+
+        if (!!context.uri) {
+          setCurrentContextUri(context.uri);
+        }
+
+        setIsLoading(loading);
+
+        const { current_track: currentTrack } = track_window;
+
+        // Only update if the track has actually changed
+        if (
+          currentTrack &&
+          currentTrack.uri !== lastTrackUriRef.current &&
+          context.uri === contextUri
+        ) {
+          // Validate that we have a proper track with required fields
+          if (
+            currentTrack.uri &&
+            currentTrack.name &&
+            currentTrack.artists &&
+            currentTrack.album
+          ) {
+            setCurrentTrackId(currentTrack.uri);
+            lastTrackUriRef.current = currentTrack.uri;
+
+            // Add the new track to sortedTracks with debouncing
+            addTrackToSortedTracks(currentTrack.uri);
+
+            console.log("New track detected:", currentTrack.name);
+          } else {
+            console.warn("Incomplete track information:", currentTrack);
           }
         }
-      );
+      });
 
       player.connect();
     };
-  }, [token]);
+
+    // Cleanup function to clear timeout when component unmounts
+    return () => {
+      isMountedRef.current = false;
+      if (trackAdditionTimeoutRef.current) {
+        clearTimeout(trackAdditionTimeoutRef.current);
+      }
+    };
+  }, []); // only want to add listeners once
 
   if (!player) {
     return <></>;
@@ -116,21 +267,40 @@ function WebPlayback({
         <>
           <button
             className="btn-spotify-player"
-            onClick={() => player.togglePlay()}
+            // onClick={() => player.togglePlay()}
+            onClick={async () => {
+              console.log({
+                currentContextUri,
+                contextUri,
+                "currentContextUri !== contextUri":
+                  currentContextUri !== contextUri,
+              });
+              if (currentContextUri !== contextUri) {
+                await startOrResumePlayback(token, contextUri, deviceId);
+              } else {
+                player.togglePlay();
+              }
+            }}
           >
             {buttonText}
           </button>
 
           <button
             className="btn-spotify-player"
-            onClick={() => player.nextTrack()}
+            onClick={async () => {
+              await player.nextTrack();
+            }}
           >
             &gt;&gt;
           </button>
 
           <button
             className="btn-spotify-player"
-            onClick={() => console.log("TO IMPLEMENT")}
+            onClick={async () => {
+              await onGuess(async () => {
+                await player.nextTrack();
+              });
+            }}
           >
             GUESS
           </button>

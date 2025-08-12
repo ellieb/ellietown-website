@@ -420,12 +420,15 @@ export async function skipToNext(accessToken: string) {
 }
 
 // https://developer.spotify.com/documentation/web-api/reference/get-the-users-currently-playing-track
-export async function getCurrentlyPlayingTrack(accessToken: string) {
+export async function getCurrentlyPlayingTrack(
+  accessToken: string,
+  market: string = "CA"
+) {
   var spotifyApi = new SpotifyWebApi();
   spotifyApi.setAccessToken(accessToken);
 
   try {
-    const body = await spotifyApi.getMyCurrentPlayingTrack();
+    const body = await spotifyApi.getMyCurrentPlayingTrack({ market });
     return body as SpotifyApi.CurrentlyPlayingResponse &
       Partial<{
         item: { album: { release_date: string } };

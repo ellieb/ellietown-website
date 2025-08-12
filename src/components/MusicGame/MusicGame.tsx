@@ -6,10 +6,6 @@ import { TrackInformation } from "./SongCard";
 import {
   checkForAccessToken,
   auth,
-  startOrResumePlayback,
-  pausePlayback,
-  skipToNext,
-  getCurrentlyPlayingTrack,
   SpotifyTokenResp,
   CurrentToken,
 } from "./SpotifyHelpers";
@@ -28,7 +24,6 @@ function MusicGame() {
   const scope =
     "user-read-playback-state user-modify-playback-state user-read-currently-playing streaming user-read-email user-read-private";
   // streaming user-read-email user-read-private is for web playback sdk
-  const [currentContextUri, setCurrentContextUri] = React.useState("");
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null
   );
@@ -77,46 +72,6 @@ function MusicGame() {
     await auth(spotifyClientId, redirectUri, scope); // this will redirect to spotify
   };
 
-  const onPlayClickHandler = (accessToken: string) => {
-    if (currentContextUri === contextUri) {
-      startOrResumePlayback(accessToken);
-    } else {
-      startOrResumePlayback(accessToken, contextUri);
-    }
-
-    checkPlaybackStatus(accessToken);
-  };
-
-  const onPauseClickHandler = (accessToken: string) => {
-    pausePlayback(accessToken);
-  };
-
-  // TODO: fix this, it is fucky
-  // TODO: Enable shuffle
-  // TODO: Look into solutions for getting correct year...
-  const checkPlaybackStatus = async (accessToken: string) => {
-    const playbackState = await getCurrentlyPlayingTrack(accessToken);
-    console.log(playbackState);
-    if (playbackState) {
-      if (playbackState.context?.uri) {
-        setCurrentContextUri(playbackState.context.uri);
-      }
-      const playingTrack = itemToCurrentTrackInfo(playbackState);
-      if (
-        playingTrack &&
-        !sortedTracks.some((track) => track.id === playingTrack.id)
-      ) {
-        setCurrentTrackId(playingTrack.id);
-        setSortedTracks((tracks) => [...tracks, playingTrack]);
-      }
-      // You can use trackInfo here or store it in state
-      console.log(
-        "Current track info:",
-        sortedTracks.find((track) => track.id === currentTrackId)
-      );
-    }
-  };
-
   React.useEffect(() => {
     const refreshTokenAndCheckPlayback = async () => {
       await checkForAccessToken(spotifyClientId, redirectUri, currentToken);
@@ -127,7 +82,40 @@ function MusicGame() {
     refreshTokenAndCheckPlayback();
   }, [currentToken, spotifyClientId]);
 
-  console.log({ sortedTracks });
+  const onGuess = async (callback: () => void) => {
+    console.log("onGuess");
+    console.log({ currentTrackId, accessToken: currentToken.accessToken });
+    if (!currentTrackId || !currentToken.accessToken) {
+      return;
+    }
+
+    const isCorrectlySorted = areTracksSorted(sortedTracks);
+    console.log({ isCorrectlySorted });
+
+    // reveal SongCard
+    setGuessState(
+      isCorrectlySorted ? GuessState.Correct : GuessState.Incorrect
+    );
+
+    if (!isCorrectlySorted) {
+      // remove from sortedTracks
+      // TODO: Move incorrect cards to a graveyard area?
+      setTimeout(() => {
+        setSortedTracks((prevSortedTracks) => {
+          return prevSortedTracks.filter(
+            (track) => track.id !== currentTrackId
+          );
+        });
+        setGuessState(GuessState.NoGuess);
+        callback();
+      }, 5000);
+    } else {
+      setTimeout(() => {
+        setGuessState(GuessState.NoGuess);
+        callback();
+      }, 5000);
+    }
+  };
 
   return (
     <div>
@@ -135,27 +123,16 @@ function MusicGame() {
       {!!currentToken.accessToken && !!contextUri && (
         <WebPlayback
           token={currentToken.accessToken}
-          currentTrackId={currentTrackId}
+          sortedTracks={sortedTracks}
           contextUri={contextUri}
+          setCurrentTrackId={setCurrentTrackId}
+          setSortedTracks={setSortedTracks}
+          onGuess={onGuess}
         />
       )}
       {!currentToken.accessToken && (
         <button onClick={onAuthorizeClickHandler}>Authorize</button>
       )}
-      <button
-        onClick={() =>
-          guessSortedTracks({
-            accessToken: currentToken.accessToken,
-            currentTrackId,
-            sortedTracks,
-            setSortedTracks,
-            setGuessState,
-            setCurrentTrackId,
-          })
-        }
-      >
-        Guess
-      </button>
       <SongGuessingArea
         currentTrackId={currentTrackId}
         sortedTracks={sortedTracks}
@@ -166,57 +143,6 @@ function MusicGame() {
   );
 }
 
-function itemToCurrentTrackInfo(
-  response: SpotifyApi.CurrentlyPlayingResponse &
-    Partial<{
-      item: { album: { release_date: string } };
-    }>
-): TrackInformation | null {
-  const { item } = response;
-  if (!item) return null;
-
-  if (!item.album.release_date) {
-    throw new Error("No release date on track");
-  }
-
-  return {
-    id: item.uri,
-    uri: item.uri,
-    name: item.name,
-    artist: item.artists[0].name,
-    album: item.album.name,
-    albumCoverUrl: item.album.images[1].url,
-    year: new Date(item.album.release_date).getFullYear(),
-  };
-}
-
-async function playNextSong({
-  accessToken,
-  sortedTracks,
-  setGuessState,
-  setSortedTracks,
-  setCurrentTrackId,
-}: {
-  accessToken: string;
-  sortedTracks: TrackInformation[];
-  setGuessState: React.Dispatch<React.SetStateAction<GuessState>>;
-  setSortedTracks: React.Dispatch<React.SetStateAction<TrackInformation[]>>;
-  setCurrentTrackId: React.Dispatch<React.SetStateAction<string | null>>;
-}) {
-  setGuessState(GuessState.NoGuess);
-  await skipToNext(accessToken);
-  const playbackState = await getCurrentlyPlayingTrack(accessToken);
-  console.log(playbackState);
-  const playingTrack = itemToCurrentTrackInfo(playbackState);
-  if (
-    playingTrack &&
-    !sortedTracks.some((track) => track.id === playingTrack.id)
-  ) {
-    setCurrentTrackId(playingTrack.id);
-    setSortedTracks((tracks) => [...tracks, playingTrack]);
-  }
-}
-
 function areTracksSorted(sortedTracks: TrackInformation[]) {
   for (let i = 1; i < sortedTracks.length; i++) {
     if (sortedTracks[i - 1].year > sortedTracks[i].year) {
@@ -224,58 +150,6 @@ function areTracksSorted(sortedTracks: TrackInformation[]) {
     }
   }
   return true;
-}
-
-function guessSortedTracks({
-  accessToken,
-  currentTrackId,
-  sortedTracks,
-  setSortedTracks,
-  setGuessState,
-  setCurrentTrackId,
-}: {
-  accessToken: string | null;
-  currentTrackId: string | null;
-  sortedTracks: TrackInformation[];
-  setSortedTracks: React.Dispatch<React.SetStateAction<TrackInformation[]>>;
-  setGuessState: React.Dispatch<React.SetStateAction<GuessState>>;
-  setCurrentTrackId: React.Dispatch<React.SetStateAction<string | null>>;
-}) {
-  if (!currentTrackId || !accessToken) {
-    return;
-  }
-
-  const isCorrectlySorted = areTracksSorted(sortedTracks);
-
-  // reveal SongCard
-  setGuessState(isCorrectlySorted ? GuessState.Correct : GuessState.Incorrect);
-
-  if (!isCorrectlySorted) {
-    // remove from sortedTracks
-    // TODO: Move incorrect cards to a graveyard area?
-    setTimeout(() => {
-      setSortedTracks((prevSortedTracks) => {
-        return prevSortedTracks.filter((track) => track.id !== currentTrackId);
-      });
-      playNextSong({
-        accessToken,
-        sortedTracks,
-        setGuessState,
-        setSortedTracks,
-        setCurrentTrackId,
-      });
-    }, 7500);
-  } else {
-    setTimeout(() => {
-      playNextSong({
-        accessToken,
-        sortedTracks,
-        setGuessState,
-        setSortedTracks,
-        setCurrentTrackId,
-      });
-    }, 5000);
-  }
 }
 
 export default MusicGame;
