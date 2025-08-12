@@ -43,7 +43,6 @@ function SortableItem({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    margin: "4px",
     cursor: isDragging ? "grabbing" : draggable ? "grab" : "default",
   };
 

@@ -1,0 +1,16 @@
+.btn-spotify-player {
+  font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
+  font-size: 16px;
+  background-color: var(--color-button);
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin: 4px;
+}
+
+button.btn-spotify-player:hover {
+  background-color: var(--color-button-hover);
+}
+
+button.btn-spotify-player:active {
+  background-color: var(--color-button-active);
+}

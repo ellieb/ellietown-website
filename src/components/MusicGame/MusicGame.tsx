@@ -13,6 +13,7 @@ import {
   SpotifyTokenResp,
   CurrentToken,
 } from "./SpotifyHelpers";
+import WebPlayback from "./WebPlayback";
 
 enum GuessState {
   Correct,
@@ -24,8 +25,9 @@ function MusicGame() {
   const spotifyClientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
   const contextUri = process.env.REACT_APP_DEFAULT_PLAYLIST_ID;
   const redirectUri = "http://127.0.0.1:3000/fun-stuff";
-  const scope = "user-modify-playback-state user-read-currently-playing";
-  const [isMusicPlaying, setIsMusicPlaying] = React.useState(false);
+  const scope =
+    "user-read-playback-state user-modify-playback-state user-read-currently-playing streaming user-read-email user-read-private";
+  // streaming user-read-email user-read-private is for web playback sdk
   const [currentContextUri, setCurrentContextUri] = React.useState("");
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null
@@ -75,8 +77,6 @@ function MusicGame() {
     await auth(spotifyClientId, redirectUri, scope); // this will redirect to spotify
   };
 
-  const accessToken = currentToken.accessToken;
-
   const onPlayClickHandler = (accessToken: string) => {
     if (currentContextUri === contextUri) {
       startOrResumePlayback(accessToken);
@@ -84,20 +84,20 @@ function MusicGame() {
       startOrResumePlayback(accessToken, contextUri);
     }
 
-    setIsMusicPlaying(true);
     checkPlaybackStatus(accessToken);
   };
 
   const onPauseClickHandler = (accessToken: string) => {
     pausePlayback(accessToken);
-    setIsMusicPlaying(false);
   };
 
+  // TODO: fix this, it is fucky
+  // TODO: Enable shuffle
+  // TODO: Look into solutions for getting correct year...
   const checkPlaybackStatus = async (accessToken: string) => {
     const playbackState = await getCurrentlyPlayingTrack(accessToken);
     console.log(playbackState);
     if (playbackState) {
-      setIsMusicPlaying(playbackState.is_playing);
       if (playbackState.context?.uri) {
         setCurrentContextUri(playbackState.context.uri);
       }
@@ -118,27 +118,34 @@ function MusicGame() {
   };
 
   React.useEffect(() => {
+    const refreshTokenAndCheckPlayback = async () => {
+      await checkForAccessToken(spotifyClientId, redirectUri, currentToken);
+      // if (accessToken) checkPlaybackStatus(accessToken);
+    };
+    // todo: check if access token is expired here...
     // on page load, check if we have an access token or code
-    checkForAccessToken(spotifyClientId, redirectUri, currentToken);
-    if (accessToken) checkPlaybackStatus(accessToken);
-  }, [accessToken, currentToken, spotifyClientId]);
+    refreshTokenAndCheckPlayback();
+  }, [currentToken, spotifyClientId]);
 
   console.log({ sortedTracks });
 
   return (
     <div>
       <h3>Try and sort these songs chronologically...</h3>
-      {!accessToken ? (
+      {!!currentToken.accessToken && !!contextUri && (
+        <WebPlayback
+          token={currentToken.accessToken}
+          currentTrackId={currentTrackId}
+          contextUri={contextUri}
+        />
+      )}
+      {!currentToken.accessToken && (
         <button onClick={onAuthorizeClickHandler}>Authorize</button>
-      ) : isMusicPlaying ? (
-        <button onClick={() => onPauseClickHandler(accessToken)}>Pause</button>
-      ) : (
-        <button onClick={() => onPlayClickHandler(accessToken)}>Play</button>
       )}
       <button
         onClick={() =>
           guessSortedTracks({
-            accessToken,
+            accessToken: currentToken.accessToken,
             currentTrackId,
             sortedTracks,
             setSortedTracks,

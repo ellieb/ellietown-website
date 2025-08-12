@@ -49,6 +49,11 @@
   --color-dropdown-hover: #e5ebf0;
   --color-blockquote-background: #00000010;
 
+  /* Button colors */
+  --color-button: #e9e7fb;
+  --color-button-hover: #d3d1e2;
+  --color-button-active: #a7a6b5;
+
   /* Text colors */
   --color-text: #000352;
   --color-text-warning: #5d0000;

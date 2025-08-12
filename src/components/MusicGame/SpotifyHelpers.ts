@@ -340,7 +340,8 @@ export const auth = async (
 // https://developer.spotify.com/documentation/web-api/reference/start-a-users-playback
 export async function startOrResumePlayback(
   accessToken: string,
-  contextUri?: string
+  contextUri?: string,
+  deviceId?: string
 ) {
   const spotifyClient = (
     await getOrCreateSpotifyClient(
@@ -352,12 +353,13 @@ export async function startOrResumePlayback(
     )
   ).client;
 
+  const options = {
+    ...(contextUri ? { context_uri: contextUri } : {}),
+    ...(deviceId ? { device_id: deviceId } : {}),
+  };
+
   try {
-    if (contextUri) {
-      await spotifyClient.play({ context_uri: contextUri });
-    } else {
-      await spotifyClient.play();
-    }
+    await spotifyClient.play(options);
   } catch (err: any) {
     const errorObject = JSON.parse(err.response);
     console.error(errorObject);
@@ -435,4 +437,46 @@ export async function getCurrentlyPlayingTrack(accessToken: string) {
       `Issue with getCurrentlyPlayingTrack  - ${errorObject.error.message}`
     );
   }
+}
+
+// https://developer.spotify.com/documentation/web-api/reference/transfer-a-users-playback
+export async function transferPlayback(accessToken: string, deviceId: string) {
+  var spotifyApi = new SpotifyWebApi();
+  spotifyApi.setAccessToken(accessToken);
+
+  try {
+    await spotifyApi.transferMyPlayback([deviceId]);
+  } catch (err: any) {
+    const errorObject = JSON.parse(err.response);
+    console.error(errorObject);
+    throw new Error(
+      `Issue with getCurrentlyPlayingTrack  - ${errorObject.error.message}`
+    );
+  }
+
+  return;
+}
+
+// https://developer.spotify.com/documentation/web-api/reference/toggle-shuffle-for-users-playback
+export async function togglePlaybackShuffle(
+  accessToken: string,
+  state: boolean,
+  device_id?: string
+) {
+  var spotifyApi = new SpotifyWebApi();
+  spotifyApi.setAccessToken(accessToken);
+
+  const options = device_id ? { device_id } : {};
+
+  try {
+    await spotifyApi.setShuffle(state, options);
+  } catch (err: any) {
+    const errorObject = JSON.parse(err.response);
+    console.error(errorObject);
+    throw new Error(
+      `Issue with getCurrentlyPlayingTrack  - ${errorObject.error.message}`
+    );
+  }
+
+  return;
 }
