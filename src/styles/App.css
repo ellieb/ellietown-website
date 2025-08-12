@@ -53,6 +53,8 @@
   --color-button: #e9e7fb;
   --color-button-hover: #d3d1e2;
   --color-button-active: #a7a6b5;
+  --color-button-disabled: #b8b8b8;
+  --color-button-border-disabled: #7d7d7d;
 
   /* Text colors */
   --color-text: #000352;

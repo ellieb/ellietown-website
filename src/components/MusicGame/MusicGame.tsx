@@ -1,7 +1,7 @@
 import React from "react";
 import "./MusicGame.css";
 import SongGuessingArea from "./SongGuessingArea";
-import { TrackInformation } from "./SongCard";
+import SongCard, { TrackInformation } from "./SongCard";
 
 import {
   checkForAccessToken,
@@ -11,11 +11,19 @@ import {
 } from "./SpotifyHelpers";
 import WebPlayback from "./WebPlayback";
 
+// TODO: pick random song as first track in sortedTracks
+// TODO: Make it's own page with no sidebar
+// TODO: Maybe you get like 2 free skips instead of combining skips and guesses???
+// TODO: Handle for case when current song ends and next begins
+
 enum GuessState {
   Correct,
   Incorrect,
   NoGuess,
 }
+
+const NUM_MAX_INCORRECT_GUESSES = 4;
+const NUM_CORRECT_SONGS_TO_WIN = 10;
 
 function MusicGame() {
   const spotifyClientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
@@ -27,13 +35,21 @@ function MusicGame() {
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null
   );
-
+  const [incorrectOrSkippedTracks, setIncorrectOrSkippedTracks] =
+    React.useState<TrackInformation[]>([]);
   const [sortedTracks, setSortedTracks] = React.useState<TrackInformation[]>(
     []
   );
   const [guessState, setGuessState] = React.useState<GuessState>(
     GuessState.NoGuess
   );
+
+  const isGameWon =
+    sortedTracks.length >= NUM_CORRECT_SONGS_TO_WIN &&
+    guessState === GuessState.Correct;
+  const isGameLost =
+    incorrectOrSkippedTracks.length >= NUM_MAX_INCORRECT_GUESSES;
+  const isGameOver = isGameWon || isGameLost;
 
   if (!spotifyClientId) {
     throw new Error("Missing Spotify client ID");
@@ -75,22 +91,34 @@ function MusicGame() {
   React.useEffect(() => {
     const refreshTokenAndCheckPlayback = async () => {
       await checkForAccessToken(spotifyClientId, redirectUri, currentToken);
-      // if (accessToken) checkPlaybackStatus(accessToken);
     };
-    // todo: check if access token is expired here...
     // on page load, check if we have an access token or code
     refreshTokenAndCheckPlayback();
   }, [currentToken, spotifyClientId]);
 
+  const onSkip = () => {
+    const skippedTrack = sortedTracks.find(
+      (track) => track.id === currentTrackId
+    );
+
+    if (skippedTrack) {
+      setIncorrectOrSkippedTracks((prevTracks) => [
+        ...prevTracks,
+        skippedTrack,
+      ]);
+    }
+
+    setSortedTracks((prevSortedTracks) => {
+      return prevSortedTracks.filter((track) => track.id !== currentTrackId);
+    });
+  };
+
   const onGuess = async (callback: () => void) => {
-    console.log("onGuess");
-    console.log({ currentTrackId, accessToken: currentToken.accessToken });
     if (!currentTrackId || !currentToken.accessToken) {
       return;
     }
 
     const isCorrectlySorted = areTracksSorted(sortedTracks);
-    console.log({ isCorrectlySorted });
 
     // reveal SongCard
     setGuessState(
@@ -98,28 +126,61 @@ function MusicGame() {
     );
 
     if (!isCorrectlySorted) {
-      // remove from sortedTracks
-      // TODO: Move incorrect cards to a graveyard area?
       setTimeout(() => {
+        // have to manually check win conditions here since setters in useState aren't reflected right away
+        let isGameLost = false;
+        const incorrectGuess = sortedTracks.find(
+          (track) => track.id === currentTrackId
+        );
+        if (incorrectGuess) {
+          setIncorrectOrSkippedTracks((prevTracks) => {
+            const incorrectTracks = [...prevTracks, incorrectGuess];
+            isGameLost = incorrectTracks.length >= NUM_MAX_INCORRECT_GUESSES;
+            return incorrectTracks;
+          });
+        }
         setSortedTracks((prevSortedTracks) => {
           return prevSortedTracks.filter(
             (track) => track.id !== currentTrackId
           );
         });
-        setGuessState(GuessState.NoGuess);
-        callback();
+
+        if (!isGameLost) {
+          setGuessState(GuessState.NoGuess);
+          callback();
+        }
       }, 5000);
     } else {
       setTimeout(() => {
-        setGuessState(GuessState.NoGuess);
-        callback();
+        const isGameWon = sortedTracks.length >= NUM_CORRECT_SONGS_TO_WIN;
+        if (!isGameWon) {
+          setGuessState(GuessState.NoGuess);
+          callback();
+        }
       }, 5000);
     }
   };
 
   return (
     <div>
-      <h3>Try and sort these songs chronologically...</h3>
+      <h3>Try and sort these songs chronologically</h3>
+      <blockquote>
+        Try and sort these songs in order ofthe year of the release date - left
+        is the oldest, right is the most recent. You get{" "}
+        {NUM_MAX_INCORRECT_GUESSES} skips/incorrect guesses combined, aiming for{" "}
+        {NUM_CORRECT_SONGS_TO_WIN} songs correctly ordered.
+      </blockquote>
+      {isGameWon ? (
+        <>
+          <p>WOoo!!! You won!!! Here is a croissant :) 🥐</p>
+          <PlayAgain />
+        </>
+      ) : isGameLost ? (
+        <>
+          <p>Dang, no dice. better luck next time cowboy 😞</p>
+          <PlayAgain />
+        </>
+      ) : null}
       {!!currentToken.accessToken && !!contextUri && (
         <WebPlayback
           token={currentToken.accessToken}
@@ -127,7 +188,9 @@ function MusicGame() {
           contextUri={contextUri}
           setCurrentTrackId={setCurrentTrackId}
           setSortedTracks={setSortedTracks}
+          onSkip={onSkip}
           onGuess={onGuess}
+          disabled={isGameOver}
         />
       )}
       {!currentToken.accessToken && (
@@ -139,6 +202,7 @@ function MusicGame() {
         setSortedTracks={setSortedTracks}
         guessState={guessState}
       />
+      <IncorrectlyGuessedSongs trackList={incorrectOrSkippedTracks} />
     </div>
   );
 }
@@ -150,6 +214,41 @@ function areTracksSorted(sortedTracks: TrackInformation[]) {
     }
   }
   return true;
+}
+
+function PlayAgain() {
+  return (
+    <button
+      className="btn-spotify-player"
+      onClick={() => window.location.reload()}
+    >
+      Play again???
+    </button>
+  );
+}
+
+function IncorrectlyGuessedSongs({
+  trackList,
+}: {
+  trackList: TrackInformation[];
+}) {
+  return (
+    <div>
+      <p>Song graveyard</p>
+      <div className="song-guessing-scroll">
+        <div className="song-guessing-row">
+          {trackList.map((track) => (
+            <SongCard
+              key={track.id}
+              track={track}
+              compact={false}
+              extraClass="incorrect-guess"
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default MusicGame;

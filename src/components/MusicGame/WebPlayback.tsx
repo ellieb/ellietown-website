@@ -10,24 +10,23 @@ import { TrackInformation } from "./SongCard";
 
 // TODO: Add volume toggle
 
-// Ways we get to a new song
-// 1. Skip
-// 2. Guess
-// 3. Song ends and next begins
-
 function WebPlayback({
   token,
   sortedTracks,
   contextUri,
+  disabled,
   setCurrentTrackId,
   setSortedTracks,
+  onSkip,
   onGuess,
 }: {
   token: string;
   sortedTracks: TrackInformation[];
   contextUri: string;
+  disabled: boolean;
   setCurrentTrackId: React.Dispatch<React.SetStateAction<string | null>>;
   setSortedTracks: React.Dispatch<React.SetStateAction<TrackInformation[]>>;
+  onSkip: () => void;
   onGuess: (callback: () => void) => Promise<void>;
 }) {
   const [player, setPlayer] = useState<Spotify.Player | undefined>(undefined);
@@ -140,6 +139,9 @@ function WebPlayback({
 
         setDeviceId(device_id);
 
+        // Set loading to false since we're now ready
+        setIsLoading(false);
+
         await player.activateElement();
         await togglePlaybackShuffle(token, true, device_id);
 
@@ -160,9 +162,6 @@ function WebPlayback({
 
           // Set the initial isPaused state based on the current player state
           setIsPaused(state.paused);
-
-          // Set loading to false since we're now ready
-          setIsLoading(false);
 
           // Handle initial track if it exists and it is in the correct context
           if (
@@ -204,14 +203,12 @@ function WebPlayback({
           return;
         }
 
-        const { track_window, loading, paused, context } = props;
+        const { track_window, paused, context } = props;
         setIsPaused(paused);
 
         if (!!context.uri) {
           setCurrentContextUri(context.uri);
         }
-
-        setIsLoading(loading);
 
         const { current_track: currentTrack } = track_window;
 
@@ -267,14 +264,7 @@ function WebPlayback({
         <>
           <button
             className="btn-spotify-player"
-            // onClick={() => player.togglePlay()}
             onClick={async () => {
-              console.log({
-                currentContextUri,
-                contextUri,
-                "currentContextUri !== contextUri":
-                  currentContextUri !== contextUri,
-              });
               if (currentContextUri !== contextUri) {
                 await startOrResumePlayback(token, contextUri, deviceId);
               } else {
@@ -288,10 +278,12 @@ function WebPlayback({
           <button
             className="btn-spotify-player"
             onClick={async () => {
+              onSkip();
               await player.nextTrack();
             }}
+            disabled={disabled}
           >
-            &gt;&gt;
+            SKIP
           </button>
 
           <button
@@ -301,6 +293,7 @@ function WebPlayback({
                 await player.nextTrack();
               });
             }}
+            disabled={disabled}
           >
             GUESS
           </button>

@@ -1,4 +1,4 @@
-.btn-spotify-player {
+button.btn-spotify-player {
   font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
   font-size: 16px;
   background-color: var(--color-button);
@@ -7,10 +7,15 @@
   margin: 4px;
 }
 
-button.btn-spotify-player:hover {
+button.btn-spotify-player:hover:enabled {
   background-color: var(--color-button-hover);
 }
 
-button.btn-spotify-player:active {
+button.btn-spotify-player:active:enabled {
   background-color: var(--color-button-active);
+}
+
+button.btn-spotify-player:disabled {
+  background-color: var(--color-button-disabled);
+  border-color: var(--color-button-border-disabled);
 }
