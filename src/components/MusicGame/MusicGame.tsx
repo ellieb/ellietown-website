@@ -12,9 +12,8 @@ import {
 import WebPlayback from "./WebPlayback";
 
 // Somewhat prioritized TODOs
-// TODO: pick random song as first track in sortedTracks - IMPLEMENTED ✅
-// TODO: Maybe you get like 2 free skips instead of combining skips and guesses??? - IMPLEMENTED ✅
-// TODO: make music game it's own page with no sidebar
+// TODO: Investigate and fix transitions after guessing cause it's rough rn
+// TODO: Also add animation when showing song information
 // TODO: Make it s.t. you have a high score rather than a win and store it in a cookie
 // TODO: Update styling so it's cute (and make the graveyard look a little different)
 // TODO: get oldest release date you can from spotify

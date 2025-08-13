@@ -23,33 +23,16 @@ function SongCard({
   extraClass?: string;
 }) {
   const { name, artist, album, year, albumCoverUrl } = track;
-  const style = compact
-    ? {
-        minHeight: "160px",
-        maxHeight: "160px",
-        minWidth: "160px",
-        maxWidth: "160px",
-      }
-    : {
-        minHeight: "160px",
-        maxHeight: "160px",
-        minWidth: "310px",
-        maxWidth: "310px",
-      };
 
   return hidden ? (
-    <div className={"hidden ".concat(extraClass)} style={style}>
-      ????
-    </div>
+    <div className={"song-display hidden ".concat(extraClass)}>????</div>
   ) : (
-    <div className={"song-display ".concat(extraClass)} style={style}>
-      {!compact && (
-        <img
-          className="song-album-cover"
-          src={albumCoverUrl}
-          alt="album cover"
-        />
-      )}
+    <div className={"song-display ".concat(compact ? "compact" : extraClass)}>
+      <img
+        className={"song-album-cover ".concat(compact ? "compact" : "")}
+        src={albumCoverUrl}
+        alt="album cover"
+      />
       <div className="song-information">
         <p className="song-name">{name}</p>
         <p className="song-year">{year}</p>

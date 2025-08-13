@@ -6,9 +6,30 @@
   border: 2px solid var(--color-border);
   border-radius: 10px;
   font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
-  text-align: left;
   justify-content: space-between;
   overflow: hidden;
+  min-height: 160px;
+  max-height: 160px;
+  width: 310px;
+  -webkit-transition: width 0.5s ease-in-out;
+  -moz-transition: width 0.5s ease-in-out;
+  -o-transition: width 0.5s ease-in-out;
+  transition: width 0.5s ease-in-out;
+}
+
+.song-display.hidden {
+  display: block;
+  background-color: black;
+  line-height: 132px;
+  color: white;
+  font-size: 48px;
+  width: 160px;
+  max-width: 160px;
+}
+
+.song-display.compact {
+  width: 160px;
+  gap: 0em;
 }
 
 .backgroundAnimatedIncorrect {
@@ -55,21 +76,19 @@
   }
 }
 
-.hidden {
-  background-color: black;
-  line-height: 160px;
-  border: 2px solid var(--color-border);
-  border-radius: 10px;
-  color: white;
-  font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
-  font-size: 48px;
-}
-
 .song-album-cover {
-  grid-area: album;
   border-radius: 5px;
   object-fit: contain;
   width: 140px;
+  -webkit-transition: width 0.5s ease-in-out;
+  -moz-transition: width 0.5s ease-in-out;
+  -o-transition: width 0.5s ease-in-out;
+  transition: width 0.5s ease-in-out;
+}
+
+.compact.song-album-cover {
+  width: 0;
+  visibility: hidden;
 }
 
 .song-information {
@@ -78,11 +97,11 @@
     "name"
     "year"
     "album-info";
-  grid-template-rows: 40px 60px 40px;
+  grid-template-rows: 30px 70px 40px;
   grid-template-columns: auto;
   text-align: center;
   justify-content: center;
-  width: 200px;
+  min-width: 140px;
 }
 
 .song-name {
@@ -100,7 +119,6 @@
 }
 
 .song-album {
-  grid-area: album;
   font-size: 12px;
   font-style: italic;
   color: var(--color-text-subtitle);
