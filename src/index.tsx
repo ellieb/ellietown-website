@@ -6,6 +6,7 @@ import App from "./App";
 import NotFound from "./pages/NotFound";
 import FunStuff from "./pages/FunStuff";
 import MyStuff from "./pages/MyStuff";
+import SongGuessingGame from "./pages/SongGuessingGame";
 
 import About from "./pages/About";
 import reportWebVitals from "./reportWebVitals";
@@ -21,6 +22,10 @@ root.render(
         <Route path="/about" element={<About />} />
         <Route path="/my-stuff" element={<MyStuff />} />
         <Route path="/fun-stuff" element={<FunStuff />} />
+        <Route
+          path="/fun-stuff/song-guessing-game"
+          element={<SongGuessingGame />}
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </React.StrictMode>

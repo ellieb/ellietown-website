@@ -93,12 +93,30 @@ function MainContent({ children }: { children: React.ReactNode }) {
   return <div className="main-content">{children}</div>;
 }
 
-function BasicLayout({ children }: { children: React.ReactNode }) {
+function BasicLayout({
+  leftSidebar = false,
+  children,
+}: {
+  leftSidebar?: boolean;
+  children: React.ReactNode;
+}) {
+  const layoutStyling = leftSidebar
+    ? {
+        gridTemplateColumns: "200px 1fr",
+        gridTemplateRows: "auto 1fr auto",
+        gridTemplateAreas: '"header header" "sidebar main" "footer footer"',
+      }
+    : {
+        gridTemplateColumns: "auto",
+        gridTemplateRows: "auto 1fr auto",
+        gridTemplateAreas: '"header" "main" "footer"',
+      };
+
   return (
     <div className="App">
-      <div className="layout">
+      <div className="layout" style={layoutStyling}>
         <Header />
-        <Sidebar />
+        {leftSidebar && <Sidebar />}
         <MainContent>{children}</MainContent>
         <Footer />
       </div>

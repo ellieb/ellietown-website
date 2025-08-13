@@ -13,16 +13,17 @@ import WebPlayback from "./WebPlayback";
 
 // Somewhat prioritized TODOs
 // TODO: pick random song as first track in sortedTracks - IMPLEMENTED ✅
-// TODO: Maybe you get like 2 free skips instead of combining skips and guesses???
-// TODO: Update styling so it's cute (and make the graveyard look a little different)
+// TODO: Maybe you get like 2 free skips instead of combining skips and guesses??? - IMPLEMENTED ✅
 // TODO: make music game it's own page with no sidebar
+// TODO: Make it s.t. you have a high score rather than a win and store it in a cookie
+// TODO: Update styling so it's cute (and make the graveyard look a little different)
 // TODO: get oldest release date you can from spotify
 // then we can try and get it running on the website
 
 // Unprioritized TODOs
 
 // TODO: When losing on a guess, continue playing the current song rather than skipping to the next one
-// TODO: Handle for case when current song ends and next begins
+// TODO: Handle for case when current song ends and next begins (increase skip?? or just pause until they make a guess?)
 // TODO: (LATER) Let users pass in their own playlist uris
 // TODO: Reset shuffle state back to normal when done
 // TODO: Transition album cover show/hide nicely
@@ -38,10 +39,9 @@ const NUM_MAX_INCORRECT_GUESSES = 3;
 const NUM_MAX_SKIPS = 2;
 const NUM_CORRECT_SONGS_TO_WIN = 10;
 
-function MusicGame() {
+function MusicGame({ redirectUri }: { redirectUri: string }) {
   const spotifyClientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
   const contextUri = process.env.REACT_APP_DEFAULT_PLAYLIST_ID;
-  const redirectUri = "http://127.0.0.1:3000/fun-stuff";
   const scope =
     "user-read-playback-state user-modify-playback-state user-read-currently-playing streaming user-read-email user-read-private";
   // streaming user-read-email user-read-private is for web playback sdk

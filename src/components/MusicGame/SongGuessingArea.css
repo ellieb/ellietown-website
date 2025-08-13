@@ -4,16 +4,36 @@
   overflow-x: auto;
   overflow-y: clip;
   -webkit-overflow-scrolling: touch;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black 10px,
+    black calc(100% - 10px),
+    transparent 100%
+  );
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black 10px,
+    black calc(100% - 10px),
+    transparent 100%
+  );
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
 }
 
 .song-guessing-row {
   display: flex;
+  width: fit-content;
   flex-direction: row;
   align-items: flex-start;
   margin: 1em 0em;
   flex-wrap: nowrap; /* prevent wrapping so it scrolls horizontally */
   gap: 8px;
-  /* overflow-y: clip; */
+  padding: 0px 20px;
 }
 
 /* Prevent children from shrinking so the row can overflow */
