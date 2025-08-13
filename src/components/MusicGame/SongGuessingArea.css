@@ -2,7 +2,7 @@
   width: 100%;
   max-width: 100%;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: clip;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -13,6 +13,7 @@
   margin: 1em 0em;
   flex-wrap: nowrap; /* prevent wrapping so it scrolls horizontally */
   gap: 8px;
+  /* overflow-y: clip; */
 }
 
 /* Prevent children from shrinking so the row can overflow */

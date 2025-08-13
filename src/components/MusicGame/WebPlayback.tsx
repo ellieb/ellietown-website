@@ -5,16 +5,20 @@ import {
   transferPlayback,
   getCurrentlyPlayingTrack,
   startOrResumePlayback,
+  getRandomTrackFromPlaylist,
 } from "./SpotifyHelpers";
 import { TrackInformation } from "./SongCard";
 
 // TODO: Add volume toggle
+// TODO: Add cleanup funtions for listeners
+// TODO: Make sure we don't replay the first random song we add!
 
 function WebPlayback({
   token,
   sortedTracks,
   contextUri,
-  disabled,
+  guessDisabled,
+  skipDisabled,
   setCurrentTrackId,
   setSortedTracks,
   onSkip,
@@ -23,10 +27,11 @@ function WebPlayback({
   token: string;
   sortedTracks: TrackInformation[];
   contextUri: string;
-  disabled: boolean;
+  guessDisabled: boolean;
+  skipDisabled: boolean;
   setCurrentTrackId: React.Dispatch<React.SetStateAction<string | null>>;
   setSortedTracks: React.Dispatch<React.SetStateAction<TrackInformation[]>>;
-  onSkip: () => void;
+  onSkip: (callback: () => void) => void;
   onGuess: (callback: () => void) => Promise<void>;
 }) {
   const [player, setPlayer] = useState<Spotify.Player | undefined>(undefined);
@@ -101,6 +106,39 @@ function WebPlayback({
     }, 1000); // 1 second debounce
   };
 
+  const populateEmptySortedTracks = async (deviceId: string) => {
+    // if sortedTracks is empty, we should populate the first track
+    try {
+      // Extract playlist ID from contextUri (remove spotify:playlist: prefix)
+      const playlistId = contextUri.replace("spotify:playlist:", "");
+
+      // Get a random track and add it to sortedTracks
+      const randomTrack = await getRandomTrackFromPlaylist(token, playlistId);
+      setSortedTracks((prevSortedTracks) => [randomTrack, ...prevSortedTracks]);
+
+      // Skip to the next track so the user can guess where the first track belongs
+      // Only try to skip if we have a device and the player is ready
+      if (deviceId && player) {
+        try {
+          await player.nextTrack();
+          console.log(
+            "Added random track to sortedTracks and skipped to next track:",
+            randomTrack.name
+          );
+        } catch (skipError) {
+          console.warn(
+            "Could not skip to next track, but random track was added:",
+            skipError
+          );
+        }
+      } else {
+        console.log("Added random track to sortedTracks:", randomTrack.name);
+      }
+    } catch (error) {
+      console.error("Failed to get random track:", error);
+    }
+  };
+
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://sdk.scdn.co/spotify-player.js";
@@ -144,6 +182,10 @@ function WebPlayback({
 
         await player.activateElement();
         await togglePlaybackShuffle(token, true, device_id);
+
+        if (sortedTracks.length === 0 || sortedTracks.length === 1) {
+          await populateEmptySortedTracks(device_id);
+        }
 
         await player.getCurrentState().then(async (state) => {
           if (!state) {
@@ -278,10 +320,11 @@ function WebPlayback({
           <button
             className="btn-spotify-player"
             onClick={async () => {
-              onSkip();
-              await player.nextTrack();
+              onSkip(async () => {
+                await player.nextTrack();
+              });
             }}
-            disabled={disabled}
+            disabled={skipDisabled}
           >
             SKIP
           </button>
@@ -293,7 +336,7 @@ function WebPlayback({
                 await player.nextTrack();
               });
             }}
-            disabled={disabled}
+            disabled={guessDisabled}
           >
             GUESS
           </button>

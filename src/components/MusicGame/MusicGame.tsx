@@ -11,18 +11,31 @@ import {
 } from "./SpotifyHelpers";
 import WebPlayback from "./WebPlayback";
 
-// TODO: pick random song as first track in sortedTracks
-// TODO: Make it's own page with no sidebar
+// Somewhat prioritized TODOs
+// TODO: pick random song as first track in sortedTracks - IMPLEMENTED ✅
 // TODO: Maybe you get like 2 free skips instead of combining skips and guesses???
+// TODO: Update styling so it's cute (and make the graveyard look a little different)
+// TODO: make music game it's own page with no sidebar
+// TODO: get oldest release date you can from spotify
+// then we can try and get it running on the website
+
+// Unprioritized TODOs
+
+// TODO: When losing on a guess, continue playing the current song rather than skipping to the next one
 // TODO: Handle for case when current song ends and next begins
+// TODO: (LATER) Let users pass in their own playlist uris
+// TODO: Reset shuffle state back to normal when done
+// TODO: Transition album cover show/hide nicely
 
 enum GuessState {
   Correct,
   Incorrect,
   NoGuess,
+  Skip,
 }
 
-const NUM_MAX_INCORRECT_GUESSES = 4;
+const NUM_MAX_INCORRECT_GUESSES = 3;
+const NUM_MAX_SKIPS = 2;
 const NUM_CORRECT_SONGS_TO_WIN = 10;
 
 function MusicGame() {
@@ -35,20 +48,22 @@ function MusicGame() {
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null
   );
-  const [incorrectOrSkippedTracks, setIncorrectOrSkippedTracks] =
-    React.useState<TrackInformation[]>([]);
+  const [incorrectTracks, setIncorrectTracks] = React.useState<
+    TrackInformation[]
+  >([]);
   const [sortedTracks, setSortedTracks] = React.useState<TrackInformation[]>(
     []
   );
   const [guessState, setGuessState] = React.useState<GuessState>(
     GuessState.NoGuess
   );
+  const [numSkips, setNumSkips] = React.useState(0);
 
   const isGameWon =
     sortedTracks.length >= NUM_CORRECT_SONGS_TO_WIN &&
     guessState === GuessState.Correct;
   const isGameLost =
-    incorrectOrSkippedTracks.length >= NUM_MAX_INCORRECT_GUESSES;
+    incorrectTracks.length - numSkips >= NUM_MAX_INCORRECT_GUESSES;
   const isGameOver = isGameWon || isGameLost;
 
   if (!spotifyClientId) {
@@ -96,21 +111,23 @@ function MusicGame() {
     refreshTokenAndCheckPlayback();
   }, [currentToken, spotifyClientId]);
 
-  const onSkip = () => {
-    const skippedTrack = sortedTracks.find(
-      (track) => track.id === currentTrackId
-    );
-
-    if (skippedTrack) {
-      setIncorrectOrSkippedTracks((prevTracks) => [
-        ...prevTracks,
-        skippedTrack,
-      ]);
-    }
-
-    setSortedTracks((prevSortedTracks) => {
-      return prevSortedTracks.filter((track) => track.id !== currentTrackId);
-    });
+  const onSkip = async (callback: () => void) => {
+    setNumSkips((prevNumSkips) => prevNumSkips + 1);
+    setGuessState(GuessState.Skip);
+    // maybe we want a little reveal??
+    setTimeout(() => {
+      const incorrectGuess = sortedTracks.find(
+        (track) => track.id === currentTrackId
+      );
+      if (incorrectGuess) {
+        setIncorrectTracks((prevTracks) => [...prevTracks, incorrectGuess]);
+      }
+      setSortedTracks((prevSortedTracks) => {
+        return prevSortedTracks.filter((track) => track.id !== currentTrackId);
+      });
+      setGuessState(GuessState.NoGuess);
+      callback();
+    }, 5000);
   };
 
   const onGuess = async (callback: () => void) => {
@@ -133,9 +150,10 @@ function MusicGame() {
           (track) => track.id === currentTrackId
         );
         if (incorrectGuess) {
-          setIncorrectOrSkippedTracks((prevTracks) => {
+          setIncorrectTracks((prevTracks) => {
             const incorrectTracks = [...prevTracks, incorrectGuess];
-            isGameLost = incorrectTracks.length >= NUM_MAX_INCORRECT_GUESSES;
+            isGameLost =
+              incorrectTracks.length - numSkips >= NUM_MAX_INCORRECT_GUESSES;
             return incorrectTracks;
           });
         }
@@ -166,18 +184,20 @@ function MusicGame() {
       <h3>Try and sort these songs chronologically</h3>
       <blockquote>
         Try and sort these songs in order ofthe year of the release date - left
-        is the oldest, right is the most recent. You get{" "}
-        {NUM_MAX_INCORRECT_GUESSES} skips/incorrect guesses combined, aiming for{" "}
-        {NUM_CORRECT_SONGS_TO_WIN} songs correctly ordered.
+        is the oldest, right is the most recent. You get {NUM_MAX_SKIPS} skips
+        and {NUM_MAX_INCORRECT_GUESSES} incorrect guesses, aiming for{" "}
+        {NUM_CORRECT_SONGS_TO_WIN} songs correctly ordered to win. Drag and drop
+        the song card with the question marks where you think it lies
+        chronologically and click the 'Guess' button to get started!
       </blockquote>
       {isGameWon ? (
         <>
-          <p>WOoo!!! You won!!! Here is a croissant :) 🥐</p>
+          <p>Wooo!!! You won!!! Here is a croissant 🥐</p>
           <PlayAgain />
         </>
       ) : isGameLost ? (
         <>
-          <p>Dang, no dice. better luck next time cowboy 😞</p>
+          <p>Dang, no dice. Better luck next time, cowboy 😞</p>
           <PlayAgain />
         </>
       ) : null}
@@ -190,7 +210,8 @@ function MusicGame() {
           setSortedTracks={setSortedTracks}
           onSkip={onSkip}
           onGuess={onGuess}
-          disabled={isGameOver}
+          guessDisabled={isGameOver}
+          skipDisabled={isGameOver || numSkips >= NUM_MAX_SKIPS}
         />
       )}
       {!currentToken.accessToken && (
@@ -202,7 +223,7 @@ function MusicGame() {
         setSortedTracks={setSortedTracks}
         guessState={guessState}
       />
-      <IncorrectlyGuessedSongs trackList={incorrectOrSkippedTracks} />
+      <IncorrectlyGuessedSongs trackList={incorrectTracks} />
     </div>
   );
 }
@@ -234,14 +255,14 @@ function IncorrectlyGuessedSongs({
 }) {
   return (
     <div>
-      <p>Song graveyard</p>
+      <h4>Song graveyard</h4>
       <div className="song-guessing-scroll">
         <div className="song-guessing-row">
           {trackList.map((track) => (
             <SongCard
               key={track.id}
               track={track}
-              compact={false}
+              compact
               extraClass="incorrect-guess"
             />
           ))}

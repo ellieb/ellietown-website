@@ -483,3 +483,65 @@ export async function togglePlaybackShuffle(
 
   return;
 }
+
+// https://developer.spotify.com/documentation/web-api/reference/get-playlist
+export async function getRandomTrackFromPlaylist(
+  accessToken: string,
+  playlistId: string,
+  market: string = "CA"
+) {
+  const spotifyClient = (
+    await getOrCreateSpotifyClient(
+      {
+        clientID: process.env.REACT_APP_SPOTIFY_CLIENT_ID || "",
+        redirectURL: "http://127.0.0.1:3000/fun-stuff",
+      },
+      accessToken
+    )
+  ).client;
+
+  try {
+    // Get playlist tracks
+    const playlist = await spotifyClient.getPlaylist(playlistId, { market });
+
+    if (
+      playlist.tracks &&
+      playlist.tracks.items &&
+      playlist.tracks.items.length > 0
+    ) {
+      // Get a random track from the playlist
+      const randomIndex = Math.floor(
+        Math.random() * playlist.tracks.items.length
+      );
+      const randomTrack = playlist.tracks.items[randomIndex].track;
+
+      // Check if the track is a valid track (not an episode)
+      if (randomTrack && "artists" in randomTrack && "album" in randomTrack) {
+        return {
+          id: randomTrack.uri,
+          uri: randomTrack.uri,
+          name: randomTrack.name,
+          artist: randomTrack.artists[0].name,
+          album: randomTrack.album.name,
+          albumCoverUrl:
+            randomTrack.album.images && randomTrack.album.images.length > 0
+              ? randomTrack.album.images[1]?.url ||
+                randomTrack.album.images[0]?.url ||
+                ""
+              : "",
+          year: (randomTrack.album as any).release_date
+            ? new Date((randomTrack.album as any).release_date).getFullYear()
+            : new Date().getFullYear(),
+        };
+      }
+    }
+
+    throw new Error("No valid tracks found in playlist");
+  } catch (err: any) {
+    const errorObject = JSON.parse(err.response);
+    console.error(errorObject);
+    throw new Error(
+      `Issue with getRandomTrackFromPlaylist - ${errorObject.error.message}`
+    );
+  }
+}

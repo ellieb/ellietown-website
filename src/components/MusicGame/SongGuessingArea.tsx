@@ -63,6 +63,7 @@ enum GuessState {
   Correct,
   Incorrect,
   NoGuess,
+  Skip,
 }
 
 function SongGuessingArea({

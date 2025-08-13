@@ -18,7 +18,7 @@
 
 @-o-keyframes fadeIncorrect {
   0% {
-    background-color: #ffcfcf;
+    background-color: #e59595;
   }
   100% {
     background-color: var(--color-content-background);
@@ -26,7 +26,7 @@
 }
 @keyframes fadeIncorrect {
   0% {
-    background-color: #ffcfcf;
+    background-color: #e59595;
   }
   100% {
     background-color: var(--color-content-background);
@@ -40,7 +40,7 @@
 
 @-o-keyframes fadeCorrect {
   0% {
-    background-color: #e1ffe1;
+    background-color: #b0efb0;
   }
   100% {
     background-color: var(--color-content-background);
@@ -48,7 +48,7 @@
 }
 @keyframes fadeCorrect {
   0% {
-    background-color: #e1ffe1;
+    background-color: #b0efb0;
   }
   100% {
     background-color: var(--color-content-background);
@@ -62,7 +62,7 @@
   border-radius: 10px;
   color: white;
   font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
-  font-size: 64px;
+  font-size: 48px;
 }
 
 .song-album-cover {
@@ -117,4 +117,26 @@
 .song-album-info {
   grid-area: album-info;
   align-self: end;
+}
+
+.incorrect-guess {
+  background-color: #d4d4d4;
+}
+
+/* Incorrect guess  */
+
+.incorrect-guess .song-name {
+  color: #6b6b6b;
+}
+
+.incorrect-guess .song-artist {
+  color: #383838;
+}
+
+.incorrect-guess .song-album {
+  color: #6b6b6b;
+}
+
+.incorrect-guess .song-year {
+  color: #383838;
 }
