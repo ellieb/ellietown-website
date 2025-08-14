@@ -13,10 +13,10 @@ import WebPlayback from "./WebPlayback";
 
 // Somewhat prioritized TODOs
 // TODO: Investigate and fix transitions after guessing cause it's rough rn
-// TODO: Also add animation when showing song information
+// TODO: Also add animation when showing song information - DONE ✅
+// TODO: get oldest release date you can from spotify
 // TODO: Make it s.t. you have a high score rather than a win and store it in a cookie
 // TODO: Update styling so it's cute (and make the graveyard look a little different)
-// TODO: get oldest release date you can from spotify
 // then we can try and get it running on the website
 
 // Unprioritized TODOs
@@ -163,7 +163,6 @@ function MusicGame({ redirectUri }: { redirectUri: string }) {
         });
 
         if (!isGameLost) {
-          setGuessState(GuessState.NoGuess);
           callback();
         }
       }, 5000);
@@ -171,7 +170,6 @@ function MusicGame({ redirectUri }: { redirectUri: string }) {
       setTimeout(() => {
         const isGameWon = sortedTracks.length >= NUM_CORRECT_SONGS_TO_WIN;
         if (!isGameWon) {
-          setGuessState(GuessState.NoGuess);
           callback();
         }
       }, 5000);
@@ -207,6 +205,7 @@ function MusicGame({ redirectUri }: { redirectUri: string }) {
           contextUri={contextUri}
           setCurrentTrackId={setCurrentTrackId}
           setSortedTracks={setSortedTracks}
+          setGuessState={setGuessState}
           onSkip={onSkip}
           onGuess={onGuess}
           guessDisabled={isGameOver}

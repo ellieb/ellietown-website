@@ -13,6 +13,13 @@ import { TrackInformation } from "./SongCard";
 // TODO: Add cleanup funtions for listeners
 // TODO: Make sure we don't replay the first random song we add!
 
+enum GuessState {
+  Correct,
+  Incorrect,
+  NoGuess,
+  Skip,
+}
+
 function WebPlayback({
   token,
   sortedTracks,
@@ -21,6 +28,7 @@ function WebPlayback({
   skipDisabled,
   setCurrentTrackId,
   setSortedTracks,
+  setGuessState,
   onSkip,
   onGuess,
 }: {
@@ -31,6 +39,7 @@ function WebPlayback({
   skipDisabled: boolean;
   setCurrentTrackId: React.Dispatch<React.SetStateAction<string | null>>;
   setSortedTracks: React.Dispatch<React.SetStateAction<TrackInformation[]>>;
+  setGuessState: React.Dispatch<React.SetStateAction<GuessState>>;
   onSkip: (callback: () => void) => void;
   onGuess: (callback: () => void) => Promise<void>;
 }) {
@@ -91,6 +100,7 @@ function WebPlayback({
               (existingTrack) => existingTrack.id === trackInfo.id
             )
           ) {
+            setGuessState(GuessState.NoGuess);
             setSortedTracks((prevTracks) => [...prevTracks, trackInfo]);
             console.log("Added new track to sortedTracks:", trackInfo);
           } else {
