@@ -1,10 +1,5 @@
 .song-display {
-  display: flex;
-  gap: 1em;
-  background-color: var(--color-content-background);
-  padding: 8px;
-  border: 2px solid var(--color-border);
-  border-radius: 10px;
+  display: inline-flex;
   font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
   justify-content: space-between;
   overflow: hidden;
@@ -15,16 +10,7 @@
   -moz-transition: width 0.5s ease-in-out;
   -o-transition: width 0.5s ease-in-out;
   transition: width 0.5s ease-in-out;
-}
-
-.song-display.hidden {
-  display: block;
-  background-color: black;
-  line-height: 132px;
-  color: white;
-  font-size: 48px;
-  width: 160px;
-  max-width: 160px;
+  perspective: 1000px;
 }
 
 .song-display.compact {
@@ -32,48 +18,40 @@
   gap: 0em;
 }
 
-.backgroundAnimatedIncorrect {
-  -o-animation: fadeIncorrect 5s ease-in-out;
-  animation: fadeIncorrect 5s ease-in-out;
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  /* height: 100%; */
+  text-align: center;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
 }
 
-@-o-keyframes fadeIncorrect {
-  0% {
-    background-color: #e59595;
-  }
-  100% {
-    background-color: var(--color-content-background);
-  }
-}
-@keyframes fadeIncorrect {
-  0% {
-    background-color: #e59595;
-  }
-  100% {
-    background-color: var(--color-content-background);
-  }
+.hidden,
+.all-song-info {
+  position: absolute;
+  padding: 8px;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden; /* Safari */
+  backface-visibility: hidden;
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
 }
 
-.backgroundAnimatedCorrect {
-  -o-animation: fadeCorrect 5s ease-in-out;
-  animation: fadeCorrect 5s ease-in-out;
+.hidden {
+  background-color: black;
+  line-height: 132px;
+  color: white;
+  font-size: 48px;
 }
 
-@-o-keyframes fadeCorrect {
-  0% {
-    background-color: #b0efb0;
-  }
-  100% {
-    background-color: var(--color-content-background);
-  }
-}
-@keyframes fadeCorrect {
-  0% {
-    background-color: #b0efb0;
-  }
-  100% {
-    background-color: var(--color-content-background);
-  }
+.all-song-info {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  background-color: var(--color-card);
+  transform: rotateY(180deg);
 }
 
 .song-album-cover {
@@ -92,7 +70,7 @@
 }
 
 .song-information {
-  display: grid;
+  display: inline-grid;
   grid-template-areas:
     "name"
     "year"
@@ -157,4 +135,50 @@
 
 .incorrect-guess .song-year {
   color: #383838;
+}
+
+/* animations */
+
+.backgroundAnimatedIncorrect {
+  -o-animation: fadeIncorrect 5s ease-in-out;
+  animation: fadeIncorrect 5s ease-in-out;
+}
+
+@-o-keyframes fadeIncorrect {
+  0% {
+    background-color: #e59595;
+  }
+  100% {
+    background-color: var(--color-card);
+  }
+}
+@keyframes fadeIncorrect {
+  0% {
+    background-color: #e59595;
+  }
+  100% {
+    background-color: var(--color-card);
+  }
+}
+
+.backgroundAnimatedCorrect {
+  -o-animation: fadeCorrect 5s ease-in-out;
+  animation: fadeCorrect 5s ease-in-out;
+}
+
+@-o-keyframes fadeCorrect {
+  0% {
+    background-color: #b0efb0;
+  }
+  100% {
+    background-color: var(--color-card);
+  }
+}
+@keyframes fadeCorrect {
+  0% {
+    background-color: #b0efb0;
+  }
+  100% {
+    background-color: var(--color-card);
+  }
 }

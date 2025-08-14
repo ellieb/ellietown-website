@@ -24,21 +24,27 @@ function SongCard({
 }) {
   const { name, artist, album, year, albumCoverUrl } = track;
 
-  return hidden ? (
-    <div className={"song-display hidden ".concat(extraClass)}>????</div>
-  ) : (
-    <div className={"song-display ".concat(compact ? "compact" : extraClass)}>
-      <img
-        className={"song-album-cover ".concat(compact ? "compact" : "")}
-        src={albumCoverUrl}
-        alt="album cover"
-      />
-      <div className="song-information">
-        <p className="song-name">{name}</p>
-        <p className="song-year">{year}</p>
-        <div className="song-album-info">
-          <p className="song-artist">{artist}</p>
-          <p className="song-album">{album}</p>
+  return (
+    <div className={"song-display ".concat(compact ? "compact" : "")}>
+      <div
+        className="flip-card-inner"
+        style={hidden ? {} : { transform: "rotateY(180deg)" }}
+      >
+        <div className="hidden">????</div>
+        <div className={"all-song-info ".concat(extraClass ? extraClass : "")}>
+          <img
+            className={"song-album-cover ".concat(compact ? "compact" : "")}
+            src={albumCoverUrl}
+            alt="album cover"
+          />
+          <div className="song-information">
+            <p className="song-name">{name}</p>
+            <p className="song-year">{year}</p>
+            <div className="song-album-info">
+              <p className="song-artist">{artist}</p>
+              <p className="song-album">{album}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

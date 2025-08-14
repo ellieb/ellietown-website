@@ -50,7 +50,7 @@
   --color-blockquote-background: #00000010;
 
   /* Button colors */
-  --color-button: #e9e7fb;
+  --color-button: #e2e8f4;
   --color-button-hover: #d3d1e2;
   --color-button-active: #a7a6b5;
   --color-button-disabled: #b8b8b8;
@@ -61,6 +61,9 @@
   --color-text-warning: #5d0000;
   --color-text-subtitle: #7e7e7e;
   --color-text-accent: #007bff;
+
+  /* Song card colors */
+  --color-card: var(--color-button);
 
   --main-border: 5px double var(--color-border);
 }
