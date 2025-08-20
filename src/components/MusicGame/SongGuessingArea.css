@@ -33,7 +33,7 @@
   margin: 1em 0em;
   flex-wrap: nowrap; /* prevent wrapping so it scrolls horizontally */
   gap: 8px;
-  padding: 0px 20px;
+  padding: 0em 1em;
 }
 
 /* Prevent children from shrinking so the row can overflow */

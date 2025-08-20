@@ -89,9 +89,13 @@ function WebPlayback({
               track.album.images && track.album.images.length > 0
                 ? track.album.images[1]?.url || track.album.images[0]?.url || ""
                 : "",
-            year: track.album.release_date
-              ? new Date(track.album.release_date).getFullYear()
-              : new Date().getFullYear(),
+            year: (track.album as any).original_release_date
+              ? new Date(
+                  (track.album as any).original_release_date
+                ).getUTCFullYear()
+              : track.album.release_date
+              ? new Date((track.album as any).release_date).getUTCFullYear()
+              : new Date().getUTCFullYear(),
           };
 
           // Check if track already exists to prevent duplicates

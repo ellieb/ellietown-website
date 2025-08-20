@@ -530,8 +530,8 @@ export async function getRandomTrackFromPlaylist(
                 ""
               : "",
           year: (randomTrack.album as any).release_date
-            ? new Date((randomTrack.album as any).release_date).getFullYear()
-            : new Date().getFullYear(),
+            ? new Date((randomTrack.album as any).release_date).getUTCFullYear()
+            : new Date().getUTCFullYear(),
         };
       }
     }

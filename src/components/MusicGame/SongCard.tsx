@@ -7,7 +7,7 @@ export type TrackInformation = {
   name: string; // item.name
   artist: string; // item.artists[0].name
   album: string; // item.album.name
-  year: number; // new Date(item.album.release_date).getFullYear()
+  year: number; // new Date(item.album.release_date).getUTCFullYear()
   albumCoverUrl: string; // item.album.images[0].url
 };
 
