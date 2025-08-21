@@ -419,6 +419,46 @@ export async function skipToNext(accessToken: string) {
   return;
 }
 
+// https://developer.spotify.com/documentation/web-api/reference/search
+export async function searchByISRC(accessToken: string, isrc: string) {
+  const spotifyClient = (
+    await getOrCreateSpotifyClient(
+      {
+        clientID: process.env.REACT_APP_SPOTIFY_CLIENT_ID || "",
+        redirectURL: "http://127.0.0.1:3000/fun-stuff",
+      },
+      accessToken
+    )
+  ).client;
+
+  const query = `isrc:${isrc}`;
+  const options = { type: "track", market: "CA", limit: 10 };
+  const results = await spotifyClient.searchTracks(query, options);
+
+  return results.tracks.items;
+}
+
+type TrackWithAlbumInfo = SpotifyApi.TrackObjectFull & {
+  album: {
+    release_date: string;
+    images: { url: string; height: number; width: number }[];
+  };
+};
+//  SpotifyApi.TrackObjectFull[]
+function findEarliestVersion(tracks: TrackWithAlbumInfo[]) {
+  let earliest = null;
+
+  for (const track of tracks) {
+    const releaseDate = track.album.release_date;
+
+    if (!earliest || releaseDate < earliest.album.release_date) {
+      earliest = track;
+    }
+  }
+
+  return earliest;
+}
+
 // https://developer.spotify.com/documentation/web-api/reference/get-the-users-currently-playing-track
 export async function getCurrentlyPlayingTrack(
   accessToken: string,
@@ -429,10 +469,25 @@ export async function getCurrentlyPlayingTrack(
 
   try {
     const body = await spotifyApi.getMyCurrentPlayingTrack({ market });
-    return body as SpotifyApi.CurrentlyPlayingResponse &
-      Partial<{
-        item: { album: { release_date: string } };
-      }>;
+
+    if (body?.item && "id" in body.item) {
+      const isrc = body.item.external_ids.isrc;
+
+      if (!isrc) {
+        throw new Error("No ISRC found for this track.");
+      }
+
+      const versions = (await searchByISRC(
+        accessToken,
+        isrc
+      )) as TrackWithAlbumInfo[];
+
+      if (versions.length === 0) {
+        throw new Error("No other versions found for this ISRC.");
+      }
+
+      return findEarliestVersion(versions as TrackWithAlbumInfo[]);
+    }
   } catch (err: any) {
     const errorObject = JSON.parse(err.response);
     console.error(errorObject);

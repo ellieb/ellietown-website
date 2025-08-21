@@ -72,12 +72,16 @@ function WebPlayback({
       if (!isMountedRef.current) return;
 
       try {
-        // Fetch full track information including release year
-        const playbackState = await getCurrentlyPlayingTrack(token);
+        // Fetch full track information including ORIGINAL release year
+        const track = await getCurrentlyPlayingTrack(token);
 
-        if (playbackState?.item && playbackState.item.uri === trackUri) {
-          const track = playbackState.item;
-
+        if (track) {
+          if (track.uri !== trackUri) {
+            // We had to grab an older version of the currently playing track to
+            // display the original release year, so we need to update currentTrackId
+            // accordingly
+            setCurrentTrackId(track.uri);
+          }
           // Create track info with full details including release year
           const trackInfo: TrackInformation = {
             id: track.uri,
@@ -89,13 +93,7 @@ function WebPlayback({
               track.album.images && track.album.images.length > 0
                 ? track.album.images[1]?.url || track.album.images[0]?.url || ""
                 : "",
-            year: (track.album as any).original_release_date
-              ? new Date(
-                  (track.album as any).original_release_date
-                ).getUTCFullYear()
-              : track.album.release_date
-              ? new Date((track.album as any).release_date).getUTCFullYear()
-              : new Date().getUTCFullYear(),
+            year: new Date(track.album.release_date).getUTCFullYear(),
           };
 
           // Check if track already exists to prevent duplicates
