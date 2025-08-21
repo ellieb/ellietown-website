@@ -26,7 +26,8 @@ import WebPlayback from "./WebPlayback";
 // TODO: Handle for case when current song ends and next begins (increase skip?? or just pause until they make a guess?)
 // TODO: (LATER) Let users pass in their own playlist uris
 // TODO: Reset shuffle state back to normal when done
-// TODO: Transition album cover show/hide nicely
+// TODO: Transition album cover show/hide nicely - DONE ✅
+// TODO: Make sure we are following spotify's rules about playing/displaying music
 
 enum GuessState {
   Correct,
@@ -188,17 +189,14 @@ function MusicGame({ redirectUri }: { redirectUri: string }) {
         the song card with the question marks where you think it lies
         chronologically and click the 'Guess' button to get started!
       </blockquote>
-      {isGameWon ? (
-        <>
-          <p>Wooo!!! You won!!! Here is a croissant 🥐</p>
-          <PlayAgain />
-        </>
-      ) : isGameLost ? (
-        <>
-          <p>Dang, no dice. Better luck next time, cowboy 😞</p>
-          <PlayAgain />
-        </>
-      ) : null}
+      <p>
+        Note: This is still *very much* a work in progress. I am having issues
+        getting the original release year for certain remastered songs, so
+        please don't get too frustrated with this game!
+      </p>
+      {(isGameWon || isGameLost) && (
+        <GameOverDisplay isGameWon={isGameWon} isGameLost={isGameLost} />
+      )}
       {!!currentToken.accessToken && !!contextUri && (
         <WebPlayback
           token={currentToken.accessToken}
@@ -236,17 +234,6 @@ function areTracksSorted(sortedTracks: TrackInformation[]) {
   return true;
 }
 
-function PlayAgain() {
-  return (
-    <button
-      className="btn-spotify-player"
-      onClick={() => window.location.reload()}
-    >
-      Play again???
-    </button>
-  );
-}
-
 function IncorrectlyGuessedSongs({
   trackList,
 }: {
@@ -268,6 +255,50 @@ function IncorrectlyGuessedSongs({
         </div>
       </div>
     </div>
+  );
+}
+
+function GameOverDisplay({
+  isGameWon,
+  isGameLost,
+}: {
+  isGameWon: boolean;
+  isGameLost: boolean;
+}) {
+  const backgroundColor = isGameWon
+    ? "#b8d0c3"
+    : isGameLost
+    ? "#d0b8b8"
+    : "none";
+  const text = isGameWon
+    ? "Wooo!!! You won!!! Here is a croissant 🥐"
+    : isGameLost
+    ? "Dang, no dice. Better luck next time, cowboy 😞"
+    : null;
+  return isGameWon || isGameLost ? (
+    <div
+      style={{
+        background: backgroundColor,
+        borderRadius: "8px",
+        padding: "0.5em",
+        margin: "1em",
+      }}
+    >
+      <p>{text}</p>
+      <PlayAgain />
+    </div>
+  ) : null;
+}
+
+function PlayAgain() {
+  return (
+    <button
+      className="btn-spotify-player"
+      style={{ padding: "0.5em 1em" }}
+      onClick={() => window.location.reload()}
+    >
+      Play again???
+    </button>
   );
 }
 

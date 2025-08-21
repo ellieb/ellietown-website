@@ -43,7 +43,6 @@
   --color-background: #ccedff;
   --color-content-background: #fcfcfc9d;
   --color-navbar: #668190;
-  --color-text-navbar: var(--color-text);
   --color-border: #004a72;
   --color-dropdown-background: white;
   --color-dropdown-hover: #e5ebf0;
@@ -58,6 +57,7 @@
 
   /* Text colors */
   --color-text: #000352;
+  --color-text-navbar: var(--color-text);
   --color-text-warning: #5d0000;
   --color-text-subtitle: #7e7e7e;
   --color-text-accent: #007bff;

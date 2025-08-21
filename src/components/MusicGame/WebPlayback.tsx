@@ -302,6 +302,7 @@ function WebPlayback({
         clearTimeout(trackAdditionTimeoutRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // only want to add listeners once
 
   if (!player) {
