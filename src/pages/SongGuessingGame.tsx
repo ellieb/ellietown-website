@@ -7,9 +7,7 @@ import MusicGame from "../components/MusicGame/MusicGame";
 function SongGuessingGame() {
   return (
     <BasicLayout leftSidebar={false}>
-      <MusicGame
-        redirectUri={"http://127.0.0.1:3000/fun-stuff/song-guessing-game"}
-      />
+      <MusicGame />
     </BasicLayout>
   );
 }

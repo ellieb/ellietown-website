@@ -33,13 +33,13 @@ export interface SpotifyTokenResp {
   refresh_token: string;
 }
 
-export type CurrentToken = {
+export interface CurrentToken {
   readonly accessToken: string | null;
   readonly refreshToken: string | null;
   readonly expiresIn: string | null;
   readonly expiresAt: string | null;
   save: (response: SpotifyTokenResp) => void;
-};
+}
 
 // Data structure to manage Spotify client instances
 export interface SpotifyClientConfig {
@@ -57,6 +57,50 @@ export interface SpotifyClientInstance {
 
 // Global client cache to avoid creating multiple instances
 const clientCache = new Map<string, SpotifyClientInstance>();
+
+// Structure that manages access token for the PKCE authorization flow
+export class PKCETokenStorage implements CurrentToken {
+  private _accessToken: string | null = null;
+  private _refreshToken: string | null = null;
+  private _expiresIn: string | null = null;
+  private _expiresAt: string | null = null;
+
+  get accessToken(): string | null {
+    return this._accessToken || localStorage.getItem("access_token");
+  }
+  get refreshToken(): string | null {
+    return this._refreshToken || localStorage.getItem("refresh_token");
+  }
+  get expiresIn(): string | null {
+    return this._expiresIn || localStorage.getItem("expires_in");
+  }
+  get expiresAt(): string | null {
+    return this._expiresAt || localStorage.getItem("expires_at");
+  }
+
+  save = (response: SpotifyTokenResp): void => {
+    const { access_token, refresh_token, expires_in } = response;
+    const expiresAt = new Date(new Date().getTime() + expires_in * 1000);
+
+    this._accessToken = response.access_token;
+    this._refreshToken = response.refresh_token;
+    this._expiresIn = response.expires_in.toString();
+    this._expiresAt = expiresAt.toString();
+
+    localStorage.setItem("access_token", access_token);
+    localStorage.setItem("refresh_token", refresh_token);
+    localStorage.setItem("expires_in", expires_in.toString());
+    localStorage.setItem("expires_at", expiresAt.toString());
+  };
+}
+
+const spotifyConfig: SpotifyClientConfig = {
+  clientID: process.env.REACT_APP_SPOTIFY_CLIENT_ID || "",
+  redirectURL:
+    process.env.REACT_APP_SPOTIFY_REDIRECT_URL || window.location.href,
+  scope:
+    "user-read-private user-read-email user-read-playback-state user-modify-playback-state",
+};
 
 /**
  * Get or create a Spotify client instance
@@ -111,6 +155,35 @@ export async function getOrCreateSpotifyClient(
   } catch (error) {
     console.error("Failed to create Spotify client:", error);
     throw new Error(`Failed to create Spotify client: ${error}`);
+  }
+}
+
+export async function getAuthenticatedClient(): Promise<SpotifyClientInstance | null> {
+  const tokenStorage = new PKCETokenStorage();
+  try {
+    // Check if we have a valid token
+    if (tokenStorage.accessToken && tokenStorage.expiresAt) {
+      const expiresAt = new Date(tokenStorage.expiresAt);
+      if (expiresAt.getTime() > new Date().getTime()) {
+        // Token is still valid
+        const clientInstance = await getOrCreateSpotifyClient(
+          spotifyConfig,
+          tokenStorage.accessToken
+        );
+        return clientInstance;
+      } else if (tokenStorage.refreshToken) {
+        // Token expired, try to refresh
+        console.log("Token expired, attempting refresh...");
+        // You would implement token refresh here
+        return null;
+      }
+    }
+
+    console.log("No valid authentication found");
+    return null;
+  } catch (error) {
+    console.error("Error getting authenticated client:", error);
+    return null;
   }
 }
 
@@ -339,27 +412,22 @@ export const auth = async (
 
 // https://developer.spotify.com/documentation/web-api/reference/start-a-users-playback
 export async function startOrResumePlayback(
-  accessToken: string,
   contextUri?: string,
   deviceId?: string
 ) {
-  const spotifyClient = (
-    await getOrCreateSpotifyClient(
-      {
-        clientID: process.env.REACT_APP_SPOTIFY_CLIENT_ID || "",
-        redirectURL: "http://127.0.0.1:3000/fun-stuff",
-      },
-      accessToken
-    )
-  ).client;
-
   const options = {
     ...(contextUri ? { context_uri: contextUri } : {}),
     ...(deviceId ? { device_id: deviceId } : {}),
   };
 
   try {
-    await spotifyClient.play(options);
+    const clientInstance = await getAuthenticatedClient();
+
+    if (!clientInstance) {
+      throw new Error("No authenticated client available");
+    }
+
+    await clientInstance.client.play(options);
   } catch (err: any) {
     const errorObject = JSON.parse(err.response);
     console.error(errorObject);
@@ -371,71 +439,26 @@ export async function startOrResumePlayback(
   return;
 }
 
-// https://developer.spotify.com/documentation/web-api/reference/pause-a-users-playback
-export async function pausePlayback(accessToken: string) {
-  // TODO: Add other params (device_id)
-  const spotifyClient = (
-    await getOrCreateSpotifyClient(
-      {
-        clientID: process.env.REACT_APP_SPOTIFY_CLIENT_ID || "",
-        redirectURL: "http://127.0.0.1:3000/fun-stuff",
-      },
-      accessToken
-    )
-  ).client;
-
-  try {
-    await spotifyClient.pause();
-  } catch (err: any) {
-    const errorObject = JSON.parse(err.response);
-    console.error(errorObject);
-    throw new Error(`Issue with pausePlayback - ${errorObject.error.message}`);
-  }
-
-  return;
-}
-
-// https://developer.spotify.com/documentation/web-api/reference/skip-users-playback-to-next-track
-export async function skipToNext(accessToken: string) {
-  // TODO: Add other params (device_id)
-  const spotifyClient = (
-    await getOrCreateSpotifyClient(
-      {
-        clientID: process.env.REACT_APP_SPOTIFY_CLIENT_ID || "",
-        redirectURL: "http://127.0.0.1:3000/fun-stuff",
-      },
-      accessToken
-    )
-  ).client;
-
-  try {
-    await spotifyClient.skipToNext();
-  } catch (err: any) {
-    const errorObject = JSON.parse(err.response);
-    console.error(errorObject);
-    throw new Error(`Issue with skipToNext  - ${errorObject.error.message}`);
-  }
-
-  return;
-}
-
 // https://developer.spotify.com/documentation/web-api/reference/search
-export async function searchByISRC(accessToken: string, isrc: string) {
-  const spotifyClient = (
-    await getOrCreateSpotifyClient(
-      {
-        clientID: process.env.REACT_APP_SPOTIFY_CLIENT_ID || "",
-        redirectURL: "http://127.0.0.1:3000/fun-stuff",
-      },
-      accessToken
-    )
-  ).client;
-
+export async function searchByISRC(isrc: string) {
   const query = `isrc:${isrc}`;
   const options = { type: "track", market: "CA", limit: 10 };
-  const results = await spotifyClient.searchTracks(query, options);
 
-  return results.tracks.items;
+  try {
+    const clientInstance = await getAuthenticatedClient();
+
+    if (!clientInstance) {
+      throw new Error("No authenticated client available");
+    }
+
+    const results = await clientInstance.client.searchTracks(query, options);
+
+    return results.tracks.items;
+  } catch (err: any) {
+    const errorObject = JSON.parse(err.response);
+    console.error(errorObject);
+    throw new Error(`Issue with searchByISRC  - ${errorObject.error.message}`);
+  }
 }
 
 type TrackWithAlbumInfo = SpotifyApi.TrackObjectFull & {
@@ -444,7 +467,7 @@ type TrackWithAlbumInfo = SpotifyApi.TrackObjectFull & {
     images: { url: string; height: number; width: number }[];
   };
 };
-//  SpotifyApi.TrackObjectFull[]
+
 function findEarliestVersion(tracks: TrackWithAlbumInfo[]) {
   let earliest = null;
 
@@ -460,15 +483,17 @@ function findEarliestVersion(tracks: TrackWithAlbumInfo[]) {
 }
 
 // https://developer.spotify.com/documentation/web-api/reference/get-the-users-currently-playing-track
-export async function getCurrentlyPlayingTrack(
-  accessToken: string,
-  market: string = "CA"
-) {
-  var spotifyApi = new SpotifyWebApi();
-  spotifyApi.setAccessToken(accessToken);
-
+export async function getCurrentlyPlayingTrack(market: string = "CA") {
   try {
-    const body = await spotifyApi.getMyCurrentPlayingTrack({ market });
+    const clientInstance = await getAuthenticatedClient();
+
+    if (!clientInstance) {
+      throw new Error("No authenticated client available");
+    }
+
+    const body = await clientInstance.client.getMyCurrentPlayingTrack({
+      market,
+    });
 
     if (body?.item && "id" in body.item) {
       const isrc = body.item.external_ids.isrc;
@@ -477,10 +502,7 @@ export async function getCurrentlyPlayingTrack(
         throw new Error("No ISRC found for this track.");
       }
 
-      const versions = (await searchByISRC(
-        accessToken,
-        isrc
-      )) as TrackWithAlbumInfo[];
+      const versions = (await searchByISRC(isrc)) as TrackWithAlbumInfo[];
 
       if (versions.length === 0) {
         throw new Error("No other versions found for this ISRC.");
@@ -498,12 +520,15 @@ export async function getCurrentlyPlayingTrack(
 }
 
 // https://developer.spotify.com/documentation/web-api/reference/transfer-a-users-playback
-export async function transferPlayback(accessToken: string, deviceId: string) {
-  var spotifyApi = new SpotifyWebApi();
-  spotifyApi.setAccessToken(accessToken);
-
+export async function transferPlayback(deviceId: string) {
   try {
-    await spotifyApi.transferMyPlayback([deviceId]);
+    const clientInstance = await getAuthenticatedClient();
+
+    if (!clientInstance) {
+      throw new Error("No authenticated client available");
+    }
+
+    await clientInstance.client.transferMyPlayback([deviceId]);
   } catch (err: any) {
     const errorObject = JSON.parse(err.response);
     console.error(errorObject);
@@ -517,17 +542,19 @@ export async function transferPlayback(accessToken: string, deviceId: string) {
 
 // https://developer.spotify.com/documentation/web-api/reference/toggle-shuffle-for-users-playback
 export async function togglePlaybackShuffle(
-  accessToken: string,
   state: boolean,
   device_id?: string
 ) {
-  var spotifyApi = new SpotifyWebApi();
-  spotifyApi.setAccessToken(accessToken);
-
   const options = device_id ? { device_id } : {};
 
   try {
-    await spotifyApi.setShuffle(state, options);
+    const clientInstance = await getAuthenticatedClient();
+
+    if (!clientInstance) {
+      throw new Error("No authenticated client available");
+    }
+
+    await clientInstance.client.setShuffle(state, options);
   } catch (err: any) {
     const errorObject = JSON.parse(err.response);
     console.error(errorObject);
@@ -541,23 +568,20 @@ export async function togglePlaybackShuffle(
 
 // https://developer.spotify.com/documentation/web-api/reference/get-playlist
 export async function getRandomTrackFromPlaylist(
-  accessToken: string,
   playlistId: string,
   market: string = "CA"
 ) {
-  const spotifyClient = (
-    await getOrCreateSpotifyClient(
-      {
-        clientID: process.env.REACT_APP_SPOTIFY_CLIENT_ID || "",
-        redirectURL: "http://127.0.0.1:3000/fun-stuff",
-      },
-      accessToken
-    )
-  ).client;
-
   try {
+    const clientInstance = await getAuthenticatedClient();
+
+    if (!clientInstance) {
+      throw new Error("No authenticated client available");
+    }
+
     // Get playlist tracks
-    const playlist = await spotifyClient.getPlaylist(playlistId, { market });
+    const playlist = await clientInstance.client.getPlaylist(playlistId, {
+      market,
+    });
 
     if (
       playlist.tracks &&

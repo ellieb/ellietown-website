@@ -73,7 +73,7 @@ function WebPlayback({
 
       try {
         // Fetch full track information including ORIGINAL release year
-        const track = await getCurrentlyPlayingTrack(token);
+        const track = await getCurrentlyPlayingTrack();
 
         if (track) {
           if (track.uri !== trackUri) {
@@ -125,7 +125,7 @@ function WebPlayback({
       const playlistId = contextUri.replace("spotify:playlist:", "");
 
       // Get a random track and add it to sortedTracks
-      const randomTrack = await getRandomTrackFromPlaylist(token, playlistId);
+      const randomTrack = await getRandomTrackFromPlaylist(playlistId);
       setSortedTracks((prevSortedTracks) => [randomTrack, ...prevSortedTracks]);
 
       // Skip to the next track so the user can guess where the first track belongs
@@ -193,7 +193,7 @@ function WebPlayback({
         setIsLoading(false);
 
         await player.activateElement();
-        await togglePlaybackShuffle(token, true, device_id);
+        await togglePlaybackShuffle(true, device_id);
 
         if (sortedTracks.length === 0 || sortedTracks.length === 1) {
           await populateEmptySortedTracks(device_id);
@@ -205,7 +205,7 @@ function WebPlayback({
               "User is not playing music through the Web Playback SDK"
             );
 
-            await transferPlayback(token, device_id);
+            await transferPlayback(device_id);
 
             return;
           }
@@ -321,7 +321,7 @@ function WebPlayback({
             className="btn-spotify-player"
             onClick={async () => {
               if (currentContextUri !== contextUri) {
-                await startOrResumePlayback(token, contextUri, deviceId);
+                await startOrResumePlayback(contextUri, deviceId);
               } else {
                 player.togglePlay();
               }

@@ -3,12 +3,7 @@ import "./MusicGame.css";
 import SongGuessingArea from "./SongGuessingArea";
 import SongCard, { TrackInformation } from "./SongCard";
 
-import {
-  checkForAccessToken,
-  auth,
-  SpotifyTokenResp,
-  CurrentToken,
-} from "./SpotifyHelpers";
+import { checkForAccessToken, auth, PKCETokenStorage } from "./SpotifyHelpers";
 import WebPlayback from "./WebPlayback";
 
 // Somewhat prioritized TODOs
@@ -40,9 +35,11 @@ const NUM_MAX_INCORRECT_GUESSES = 3;
 const NUM_MAX_SKIPS = 2;
 const NUM_CORRECT_SONGS_TO_WIN = 10;
 
-function MusicGame({ redirectUri }: { redirectUri: string }) {
+function MusicGame() {
   const spotifyClientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
   const contextUri = process.env.REACT_APP_DEFAULT_PLAYLIST_ID;
+  const redirectUri =
+    process.env.REACT_APP_SPOTIFY_REDIRECT_URL || window.location.href;
   const scope =
     "user-read-playback-state user-modify-playback-state user-read-currently-playing streaming user-read-email user-read-private";
   // streaming user-read-email user-read-private is for web playback sdk
@@ -71,34 +68,7 @@ function MusicGame({ redirectUri }: { redirectUri: string }) {
     throw new Error("Missing Spotify client ID");
   }
 
-  // structure that manages access token for the PKCE authorization flow
-  const currentToken: CurrentToken = React.useMemo(
-    () => ({
-      get accessToken() {
-        return localStorage.getItem("access_token") || null;
-      },
-      get refreshToken() {
-        return localStorage.getItem("refresh_token") || null;
-      },
-      get expiresIn() {
-        return localStorage.getItem("expires_in") || null;
-      },
-      get expiresAt() {
-        return localStorage.getItem("expires_at") || null;
-      },
-
-      save: function (response: SpotifyTokenResp) {
-        const { access_token, refresh_token, expires_in } = response;
-        localStorage.setItem("access_token", access_token);
-        localStorage.setItem("refresh_token", refresh_token);
-        localStorage.setItem("expires_in", expires_in.toString());
-
-        const expires_at = new Date(new Date().getTime() + expires_in * 1000);
-        localStorage.setItem("expires_at", expires_at.toString());
-      },
-    }),
-    []
-  );
+  const currentToken = React.useMemo(() => new PKCETokenStorage(), []);
 
   const onAuthorizeClickHandler = async () => {
     await auth(spotifyClientId, redirectUri, scope); // this will redirect to spotify
@@ -212,7 +182,12 @@ function MusicGame({ redirectUri }: { redirectUri: string }) {
         />
       )}
       {!currentToken.accessToken && (
-        <button onClick={onAuthorizeClickHandler}>Authorize</button>
+        <button
+          className="btn-spotify-player"
+          onClick={onAuthorizeClickHandler}
+        >
+          Authorize
+        </button>
       )}
       <SongGuessingArea
         currentTrackId={currentTrackId}
