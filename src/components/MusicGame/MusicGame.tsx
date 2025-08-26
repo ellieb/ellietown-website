@@ -3,7 +3,7 @@ import "./MusicGame.css";
 import SongGuessingArea from "./SongGuessingArea";
 import SongCard, { TrackInformation } from "./SongCard";
 
-import { checkForAccessToken, auth, PKCETokenStorage } from "./SpotifyHelpers";
+import { checkForAccessToken, auth } from "./SpotifyHelpers";
 import WebPlayback from "./WebPlayback";
 
 // Somewhat prioritized TODOs
@@ -38,11 +38,6 @@ const NUM_CORRECT_SONGS_TO_WIN = 10;
 function MusicGame() {
   const spotifyClientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
   const contextUri = process.env.REACT_APP_DEFAULT_PLAYLIST_ID;
-  const redirectUri =
-    process.env.REACT_APP_SPOTIFY_REDIRECT_URL || window.location.href;
-  const scope =
-    "user-read-playback-state user-modify-playback-state user-read-currently-playing streaming user-read-email user-read-private";
-  // streaming user-read-email user-read-private is for web playback sdk
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null
   );
@@ -56,6 +51,9 @@ function MusicGame() {
     GuessState.NoGuess
   );
   const [numSkips, setNumSkips] = React.useState(0);
+  const [accessToken, setAccessToken] = React.useState(() =>
+    localStorage.getItem("access_token")
+  );
 
   const isGameWon =
     sortedTracks.length >= NUM_CORRECT_SONGS_TO_WIN &&
@@ -68,19 +66,21 @@ function MusicGame() {
     throw new Error("Missing Spotify client ID");
   }
 
-  const currentToken = React.useMemo(() => new PKCETokenStorage(), []);
-
   const onAuthorizeClickHandler = async () => {
-    await auth(spotifyClientId, redirectUri, scope); // this will redirect to spotify
+    await auth(); // this will redirect to spotify
   };
 
   React.useEffect(() => {
     const refreshTokenAndCheckPlayback = async () => {
-      await checkForAccessToken(spotifyClientId, redirectUri, currentToken);
+      const newAccessToken = await checkForAccessToken();
+      if (newAccessToken !== accessToken) {
+        setAccessToken(newAccessToken);
+      }
     };
     // on page load, check if we have an access token or code
     refreshTokenAndCheckPlayback();
-  }, [currentToken, spotifyClientId, redirectUri]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onSkip = async (callback: () => void) => {
     setNumSkips((prevNumSkips) => prevNumSkips + 1);
@@ -102,7 +102,7 @@ function MusicGame() {
   };
 
   const onGuess = async (callback: () => void) => {
-    if (!currentTrackId || !currentToken.accessToken) {
+    if (!currentTrackId || !accessToken) {
       return;
     }
 
@@ -167,9 +167,9 @@ function MusicGame() {
       {(isGameWon || isGameLost) && (
         <GameOverDisplay isGameWon={isGameWon} isGameLost={isGameLost} />
       )}
-      {!!currentToken.accessToken && !!contextUri && (
+      {!!accessToken && !!contextUri && (
         <WebPlayback
-          token={currentToken.accessToken}
+          token={accessToken}
           sortedTracks={sortedTracks}
           contextUri={contextUri}
           setCurrentTrackId={setCurrentTrackId}
@@ -181,7 +181,7 @@ function MusicGame() {
           skipDisabled={isGameOver || numSkips >= NUM_MAX_SKIPS}
         />
       )}
-      {!currentToken.accessToken && (
+      {!accessToken && (
         <button
           className="btn-spotify-player"
           onClick={onAuthorizeClickHandler}

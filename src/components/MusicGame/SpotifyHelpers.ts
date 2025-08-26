@@ -45,7 +45,7 @@ export interface CurrentToken {
 export interface SpotifyClientConfig {
   clientID: string;
   redirectURL: string;
-  scope?: string;
+  scope: string;
 }
 
 export interface SpotifyClientInstance {
@@ -99,7 +99,7 @@ const spotifyConfig: SpotifyClientConfig = {
   redirectURL:
     process.env.REACT_APP_SPOTIFY_REDIRECT_URL || window.location.href,
   scope:
-    "user-read-private user-read-email user-read-playback-state user-modify-playback-state",
+    "user-read-playback-state user-modify-playback-state user-read-currently-playing streaming user-read-email user-read-private",
 };
 
 /**
@@ -305,18 +305,19 @@ const getToken = async (
   return body;
 };
 
-export const checkForAccessToken = async (
-  spotifyClientId: string,
-  redirectUri: string,
-  currentToken: CurrentToken
-) => {
+export const checkForAccessToken = async () => {
   // on page load, check if auth code is set from Spotify redirect
+  const currentToken = new PKCETokenStorage();
   const urlParams = new URLSearchParams(window.location.search);
   const code = urlParams.get("code");
 
   // if there is a code, do a token exchange
   if (code) {
-    const token = await getToken(code, spotifyClientId, redirectUri);
+    const token = await getToken(
+      code,
+      spotifyConfig.clientID,
+      spotifyConfig.redirectURL
+    );
     currentToken.save(token);
 
     // remove code from URL
@@ -342,9 +343,10 @@ export const checkForAccessToken = async (
     currentToken.refreshToken
   ) {
     // use refresh token to reauth
-    const token = await refreshToken(spotifyClientId, currentToken);
+    const token = await refreshToken(spotifyConfig.clientID, currentToken);
     currentToken.save(token);
   }
+  return currentToken.accessToken;
 };
 
 export const refreshToken = async (
@@ -380,11 +382,7 @@ export const refreshToken = async (
 };
 
 // TODO: Add error handling here too if user decides to cancel instead of authorize :)
-export const auth = async (
-  spotifyClientId: string,
-  redirectUri: string,
-  scope: string
-) => {
+export const auth = async () => {
   const codeVerifier = generateRandomString(64);
   const hashed = await sha256(codeVerifier);
   const codeChallenge = base64encode(hashed);
@@ -393,11 +391,11 @@ export const auth = async (
 
   const params = {
     response_type: "code",
-    client_id: spotifyClientId,
-    scope,
+    client_id: spotifyConfig.clientID,
+    scope: spotifyConfig.scope,
     code_challenge_method: "S256",
     code_challenge: codeChallenge,
-    redirect_uri: redirectUri,
+    redirect_uri: spotifyConfig.redirectURL,
   };
   const authUrl = new URL("https://accounts.spotify.com/authorize");
   authUrl.search = new URLSearchParams(params).toString();

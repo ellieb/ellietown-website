@@ -159,7 +159,11 @@ function WebPlayback({
     document.body.appendChild(script);
 
     window.onSpotifyWebPlaybackSDKReady = () => {
-      const player = new window.Spotify.Player({
+      if (!!player) {
+        return;
+      }
+
+      const spotifyPlayer = new window.Spotify.Player({
         name: "Web Playback SDK",
         getOAuthToken: (cb) => {
           cb(token);
@@ -167,24 +171,24 @@ function WebPlayback({
         volume: 0.5,
       });
 
-      setPlayer(player);
+      setPlayer(spotifyPlayer);
 
       // Error handling
       // [Source: https://howik.com/exploring-spotify-web-playback-sdk]
-      player.addListener("initialization_error", ({ message }) => {
+      spotifyPlayer.addListener("initialization_error", ({ message }) => {
         console.error(message);
       });
-      player.addListener("authentication_error", ({ message }) => {
+      spotifyPlayer.addListener("authentication_error", ({ message }) => {
         console.error(message); //Invalid token scopes.
       });
-      player.addListener("account_error", ({ message }) => {
+      spotifyPlayer.addListener("account_error", ({ message }) => {
         console.error(message);
       });
-      player.addListener("playback_error", ({ message }) => {
+      spotifyPlayer.addListener("playback_error", ({ message }) => {
         console.error(message);
       });
 
-      player.addListener("ready", async ({ device_id }) => {
+      spotifyPlayer.addListener("ready", async ({ device_id }) => {
         console.log("Ready with Device ID", device_id);
 
         setDeviceId(device_id);
@@ -192,14 +196,14 @@ function WebPlayback({
         // Set loading to false since we're now ready
         setIsLoading(false);
 
-        await player.activateElement();
+        await spotifyPlayer.activateElement();
         await togglePlaybackShuffle(true, device_id);
 
-        if (sortedTracks.length === 0 || sortedTracks.length === 1) {
+        if (sortedTracks.length === 0) {
           await populateEmptySortedTracks(device_id);
         }
 
-        await player.getCurrentState().then(async (state) => {
+        await spotifyPlayer.getCurrentState().then(async (state) => {
           if (!state) {
             console.error(
               "User is not playing music through the Web Playback SDK"
@@ -248,11 +252,11 @@ function WebPlayback({
         });
       });
 
-      player.addListener("not_ready", ({ device_id }) => {
+      spotifyPlayer.addListener("not_ready", ({ device_id }) => {
         console.log("Device ID has gone offline", device_id);
       });
 
-      player.addListener("player_state_changed", async (props) => {
+      spotifyPlayer.addListener("player_state_changed", async (props) => {
         if (!props) {
           return;
         }
@@ -292,11 +296,15 @@ function WebPlayback({
         }
       });
 
-      player.connect();
+      spotifyPlayer.connect();
     };
 
     // Cleanup function to clear timeout when component unmounts
     return () => {
+      if (player) {
+        player.disconnect();
+      }
+
       isMountedRef.current = false;
       if (trackAdditionTimeoutRef.current) {
         clearTimeout(trackAdditionTimeoutRef.current);

@@ -16,19 +16,19 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <BrowserRouter>
-    <React.StrictMode>
-      <Routes>
-        <Route index element={<App />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/my-stuff" element={<MyStuff />} />
-        <Route path="/fun-stuff" element={<FunStuff />} />
-        <Route
-          path="/fun-stuff/song-guessing-game"
-          element={<SongGuessingGame />}
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </React.StrictMode>
+    {/* <React.StrictMode> */}
+    <Routes>
+      <Route index element={<App />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/my-stuff" element={<MyStuff />} />
+      <Route path="/fun-stuff" element={<FunStuff />} />
+      <Route
+        path="/fun-stuff/song-guessing-game"
+        element={<SongGuessingGame />}
+      />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+    {/* </React.StrictMode> */}
   </BrowserRouter>
 );
 
