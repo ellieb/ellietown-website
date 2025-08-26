@@ -114,7 +114,7 @@ function MyStuff() {
       {/* <div>coding projects</div> */}
       {/* <div>media I love</div> */}
 
-      <Section title={"Kombucha Diaries"}>
+      <Section title={"Kombucha"}>
         <p>
           I have been making kombucha since around May 2025. I want to document
           any particularly delicious flavour combinations I try out. Some of my

@@ -12,9 +12,9 @@ function Header() {
           <li>
             <a href="/">home</a>
           </li>{" "}
-          <li>
+          {/* <li>
             <a href="/about">about</a>
-            {/* <ul>
+             <ul>
               <li>
                 <a href="/fun-stuff/about-me">about me</a>
               </li>
@@ -24,8 +24,8 @@ function Header() {
               <li>
                 <a href="/fun-stuff/guestbook">guestbook</a>
               </li>
-            </ul> */}
-          </li>{" "}
+            </ul> 
+          </li>{" "} */}
           <li>
             <a href="/my-stuff">my stuff</a>
             {/* <ul>
