@@ -6,10 +6,10 @@ function About() {
   return (
     <BasicLayout>
       <Section title={"About me"}>
-        Hello! I am (sometimes) a software developer and have recently decided
-        to make a lil personal website! The idea for this project is to give
-        myself a personal space to play around with web development, get a
-        little bit of practice, and have fun.
+        I am (sometimes) a software developer and have recently decided to make
+        a lil personal website! The idea for this project is to give myself a
+        personal space to play around with web development, get a little bit of
+        practice, and have fun.
       </Section>
 
       <Section title={"About this site"}>
@@ -89,9 +89,33 @@ function About() {
             </a>
           </li>
         </ul>
-        {/* https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow and all the spotify developer docs 
-        https://github.com/spotify/web-api-examples/blob/master/authorization/authorization_code_pkce/public/app.js*/}
-        {/* https://docs.dndkit.com/ */}
+        <li>
+          <a
+            href="https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow/
+          </a>
+        </li>
+        <li>
+          <a
+            href="https://github.com/spotify/web-api-examples/blob/master/authorization/authorization_code_pkce/public/app.js/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            https://github.com/spotify/web-api-examples/blob/master/authorization/authorization_code_pkce/public/app.js/
+          </a>
+        </li>
+        <li>
+          <a
+            href="https://docs.dndkit.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            https://docs.dndkit.com/
+          </a>
+        </li>
       </Section>
 
       {/* <Section title={"Guestbook"}>

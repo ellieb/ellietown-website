@@ -38,7 +38,7 @@ function MyStuff() {
         ></iframe>
 
         <p>
-          If it was on spotify, this song would be #1 in that playlist!
+          If it was on spotify, this song would be #1 in that playlist.
           heartbreaking and beautiful
         </p>
         <iframe
@@ -70,11 +70,11 @@ function MyStuff() {
           loading="lazy"
         ></iframe>
 
-        <p>
+        {/* <p>
           I think next playlist I should make should be songs like "Everything
           in it's right place" since I NEED to listen to that song daily but I
           really don't want to wear it out
-        </p>
+        </p> */}
       </Section>
 
       {/* <Section title="Playlists">
@@ -117,17 +117,17 @@ function MyStuff() {
       <Section title={"Kombucha Diaries"}>
         <p>
           I have been making kombucha since around May 2025. I want to document
-          any particularly delicious flavour combinations I try out, and
-          hopefully include some pictures in the future! Some of the best
-          flavours so far have been:
+          any particularly delicious flavour combinations I try out. Some of my
+          favourites so far have been:
           <ul>
             <li>apple ginger</li>
             <li>passionfruit</li>
-            <li>orange ginger (with freshly squeezed juice!)</li>
+            <li>orange ginger 🍊</li>
             <li>cherry</li>
             <li>blueberry</li>
           </ul>
-          I have yet to mess around with different varieties of tea...
+          The next thing I want to experiment with is different varieties of
+          tea, I have just been using orange pekoe so far.
           {/* TODO: Talk about the Noma Guide to Fermentation */}
         </p>
       </Section>

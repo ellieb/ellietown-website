@@ -4,8 +4,8 @@ import "./BasicLayout.css";
 function Header() {
   return (
     <header className="header">
-      <h1>~*~ ellie's special spot~*~</h1>
-      <h2 style={{ textAlign: "center" }}>enter, if u dare</h2>
+      <h1>~*~ ellietown ~*~</h1>
+      {/* <h2 style={{ textAlign: "center" }}>enter, if u dare</h2> */}
 
       <nav className="navbar">
         <ul>
