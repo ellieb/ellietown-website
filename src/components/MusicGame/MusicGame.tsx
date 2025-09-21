@@ -14,6 +14,7 @@ import WebPlayback from "./WebPlayback";
 
 // Unprioritized TODOs
 
+// TODO: Make a nice initial experience (Press "Start" then reveal first card.)
 // TODO: Make it s.t. you have a high score rather than a win and store it in a cookie
 // TODO: Update styling so it's cute (and make the graveyard look a little different)
 // TODO: Fix refresh token issues
@@ -23,6 +24,7 @@ import WebPlayback from "./WebPlayback";
 // TODO: Reset shuffle state back to normal when done
 // TODO: Transition album cover show/hide nicely - DONE ✅
 // TODO: Make sure we are following spotify's rules about playing/displaying music
+// TODO: Make sure there are never repeats
 
 enum GuessState {
   Correct,
@@ -150,19 +152,29 @@ function MusicGame() {
 
   return (
     <div>
-      <h3>Try and sort these songs chronologically</h3>
+      <h3>Music Sorting Game</h3>
       <blockquote>
-        Try and sort these songs in order ofthe year of the release date - left
+        Try and sort these songs in order of the year of the release date - left
         is the oldest, right is the most recent. You get {NUM_MAX_SKIPS} skips
         and {NUM_MAX_INCORRECT_GUESSES} incorrect guesses, aiming for{" "}
         {NUM_CORRECT_SONGS_TO_WIN} songs correctly ordered to win. Drag and drop
         the song card with the question marks where you think it lies
-        chronologically and click the 'Guess' button to get started!
+        chronologically and click the 'Start' button to get started!
       </blockquote>
       <p>
-        Note: This is still *very much* a work in progress. I am having issues
-        getting the original release year for certain remastered songs, so
-        please don't get too frustrated with this game!
+        Note: Since this is app uses Spotify's API in development mode, I need
+        to individually add users in the app dashboard in order to access the
+        app. If you can't access the game, please email me your name and email
+        you use for Spotify (premium account is required) at{" "}
+        <a href="mailto:ellieinellietown@gmail.com">
+          ellieinellietown@gmail.com
+        </a>
+        .
+      </p>
+      <p>
+        Note #2: This is still *very much* a work in progress. I am having
+        issues getting the original release year for certain remastered songs,
+        so please don't get too frustrated!
       </p>
       {(isGameWon || isGameLost) && (
         <GameOverDisplay isGameWon={isGameWon} isGameLost={isGameLost} />

@@ -9,7 +9,7 @@ function Home() {
         <p>hello hello! 🫧😎👽</p>
         <p>
           This is a lil project for me to try some new things out, a little
-          design, a little game or too, some integrations, etc. It is pretty
+          design, a little game or two, some integrations, etc. It is pretty
           bare-bones right now, but I'm hoping to slowly flesh it out into
           something I'm happy with.
         </p>
