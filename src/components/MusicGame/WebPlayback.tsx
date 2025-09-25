@@ -46,6 +46,7 @@ function WebPlayback({
   const [player, setPlayer] = useState<Spotify.Player | undefined>(undefined);
   const [isPaused, setIsPaused] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasStarted, setHasStarted] = useState(false);
   const [currentContextUri, setCurrentContextUri] = useState("");
   const [deviceId, setDeviceId] = useState("");
 
@@ -55,6 +56,23 @@ function WebPlayback({
   const trackAdditionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   // Ref to track if component is mounted
   const isMountedRef = useRef(true);
+  // Refs to store current state values for use in listeners
+  const hasStartedRef = useRef(false);
+  const sortedTracksRef = useRef<TrackInformation[]>([]);
+  const currentContextUriRef = useRef<string | null>(null);
+
+  // Keep refs updated with current state values
+  useEffect(() => {
+    hasStartedRef.current = hasStarted;
+  }, [hasStarted]);
+
+  useEffect(() => {
+    sortedTracksRef.current = sortedTracks;
+  }, [sortedTracks]);
+
+  useEffect(() => {
+    currentContextUriRef.current = currentContextUri;
+  }, [currentContextUri]);
 
   // Helper function to add tracks with debouncing and full information
   const addTrackToSortedTracks = async (trackUri: string) => {
@@ -98,7 +116,7 @@ function WebPlayback({
 
           // Check if track already exists to prevent duplicates
           if (
-            !sortedTracks.some(
+            !sortedTracksRef.current.some(
               (existingTrack) => existingTrack.id === trackInfo.id
             )
           ) {
@@ -199,10 +217,6 @@ function WebPlayback({
         await spotifyPlayer.activateElement();
         await togglePlaybackShuffle(true, device_id);
 
-        if (sortedTracks.length === 0) {
-          await populateEmptySortedTracks(device_id);
-        }
-
         await spotifyPlayer.getCurrentState().then(async (state) => {
           if (!state) {
             console.error(
@@ -214,41 +228,15 @@ function WebPlayback({
             return;
           }
 
-          if (state.context.uri) {
+          if (
+            state.context.uri &&
+            currentContextUriRef.current !== state.context.uri
+          ) {
             setCurrentContextUri(state.context.uri);
           }
 
           // Set the initial isPaused state based on the current player state
           setIsPaused(state.paused);
-
-          // Handle initial track if it exists and it is in the correct context
-          if (
-            state.track_window.current_track &&
-            state.context.uri === contextUri
-          ) {
-            const initialTrack = state.track_window.current_track;
-
-            // Validate that we have a proper track with required fields
-            if (
-              initialTrack.uri &&
-              initialTrack.name &&
-              initialTrack.artists &&
-              initialTrack.album
-            ) {
-              setCurrentTrackId(initialTrack.uri);
-              lastTrackUriRef.current = initialTrack.uri;
-
-              // Add the initial track to sortedTracks
-              addTrackToSortedTracks(initialTrack.uri);
-
-              console.log("Initial track detected:", initialTrack.name);
-            } else {
-              console.warn(
-                "Incomplete initial track information:",
-                initialTrack
-              );
-            }
-          }
         });
       });
 
@@ -264,7 +252,7 @@ function WebPlayback({
         const { track_window, paused, context } = props;
         setIsPaused(paused);
 
-        if (!!context.uri) {
+        if (context.uri && currentContextUriRef.current !== context.uri) {
           setCurrentContextUri(context.uri);
         }
 
@@ -274,7 +262,8 @@ function WebPlayback({
         if (
           currentTrack &&
           currentTrack.uri !== lastTrackUriRef.current &&
-          context.uri === contextUri
+          context.uri === contextUri &&
+          hasStartedRef.current
         ) {
           // Validate that we have a proper track with required fields
           if (
@@ -323,6 +312,24 @@ function WebPlayback({
     <div className="main-wrapper">
       {isLoading ? (
         <p>Loading..</p>
+      ) : !hasStarted ? (
+        <button
+          className="btn-spotify-player"
+          onClick={async () => {
+            setHasStarted(true);
+            if (sortedTracks.length === 0) {
+              await populateEmptySortedTracks(deviceId);
+            }
+
+            if (currentContextUri !== contextUri) {
+              await startOrResumePlayback(contextUri, deviceId);
+            } else {
+              player.togglePlay();
+            }
+          }}
+        >
+          START
+        </button>
       ) : (
         <>
           <button
