@@ -6,25 +6,25 @@ import SongCard, { TrackInformation } from "./SongCard";
 import { checkForAccessToken, auth } from "./SpotifyHelpers";
 import WebPlayback from "./WebPlayback";
 
-// Somewhat prioritized TODOs
+// Completed TODOs
 // TODO: Investigate and fix transitions after guessing cause it's rough rn - DONE ✅
 // TODO: Also add animation when showing song information - DONE ✅
 // TODO: get oldest release date you can from spotify - SOMEWHAT done 🟡
-// then we can try and get it running on the website
+// TODO: Make a nice initial experience (Press "Start" then reveal first card.) - DONE ✅
+// TODO: Transition album cover show/hide nicely - DONE ✅
+// TODO: Make it s.t. you have a high score rather than a win and store it in a cookie - DONE ✅
 
 // Unprioritized TODOs
 
-// TODO: Make a nice initial experience (Press "Start" then reveal first card.)
-// TODO: Make it s.t. you have a high score rather than a win and store it in a cookie
+// TODO: When losing on a guess, continue playing the current song rather than skipping to the next one? or just stop playing music../?
 // TODO: Update styling so it's cute (and make the graveyard look a little different)
 // TODO: Fix refresh token issues
-// TODO: When losing on a guess, continue playing the current song rather than skipping to the next one
 // TODO: Handle for case when current song ends and next begins (increase skip?? or just pause until they make a guess?)
 // TODO: (LATER) Let users pass in their own playlist uris
 // TODO: Reset shuffle state back to normal when done
-// TODO: Transition album cover show/hide nicely - DONE ✅
 // TODO: Make sure we are following spotify's rules about playing/displaying music
 // TODO: Make sure there are never repeats
+// TODO: Mobile friendly
 
 enum GuessState {
   Correct,
@@ -33,9 +33,8 @@ enum GuessState {
   Skip,
 }
 
-const NUM_MAX_INCORRECT_GUESSES = 3;
+const NUM_MAX_INCORRECT_GUESSES = 1;
 const NUM_MAX_SKIPS = 2;
-const NUM_CORRECT_SONGS_TO_WIN = 10;
 
 function MusicGame() {
   const spotifyClientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
@@ -56,13 +55,10 @@ function MusicGame() {
   const [accessToken, setAccessToken] = React.useState(() =>
     localStorage.getItem("access_token")
   );
+  const [score, setScore] = React.useState(0);
 
-  const isGameWon =
-    sortedTracks.length >= NUM_CORRECT_SONGS_TO_WIN &&
-    guessState === GuessState.Correct;
-  const isGameLost =
+  const isGameOver =
     incorrectTracks.length - numSkips >= NUM_MAX_INCORRECT_GUESSES;
-  const isGameOver = isGameWon || isGameLost;
 
   if (!spotifyClientId) {
     throw new Error("Missing Spotify client ID");
@@ -83,6 +79,8 @@ function MusicGame() {
     refreshTokenAndCheckPlayback();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const highScore = Number(localStorage.getItem("highScore")) || 0;
 
   const onSkip = async (callback: () => void) => {
     setNumSkips((prevNumSkips) => prevNumSkips + 1);
@@ -118,17 +116,14 @@ function MusicGame() {
     if (!isCorrectlySorted) {
       setTimeout(() => {
         // have to manually check win conditions here since setters in useState aren't reflected right away
-        let isGameLost = false;
         const incorrectGuess = sortedTracks.find(
           (track) => track.id === currentTrackId
         );
+        const isGameOver = incorrectGuess
+          ? incorrectTracks.length + 1 - numSkips >= NUM_MAX_INCORRECT_GUESSES
+          : false;
         if (incorrectGuess) {
-          setIncorrectTracks((prevTracks) => {
-            const incorrectTracks = [...prevTracks, incorrectGuess];
-            isGameLost =
-              incorrectTracks.length - numSkips >= NUM_MAX_INCORRECT_GUESSES;
-            return incorrectTracks;
-          });
+          setIncorrectTracks((prevTracks) => [...prevTracks, incorrectGuess]);
         }
         setSortedTracks((prevSortedTracks) => {
           return prevSortedTracks.filter(
@@ -136,16 +131,18 @@ function MusicGame() {
           );
         });
 
-        if (!isGameLost) {
+        if (isGameOver) {
+          if (score > highScore) {
+            localStorage.setItem("highScore", score.toString());
+          }
+        } else {
           callback();
         }
       }, 5000);
     } else {
       setTimeout(() => {
-        const isGameWon = sortedTracks.length >= NUM_CORRECT_SONGS_TO_WIN;
-        if (!isGameWon) {
-          callback();
-        }
+        setScore((prevScore) => prevScore + 1);
+        callback();
       }, 5000);
     }
   };
@@ -156,29 +153,38 @@ function MusicGame() {
       <blockquote>
         Try and sort these songs in order of the year of the release date - left
         is the oldest, right is the most recent. You get {NUM_MAX_SKIPS} skips
-        and {NUM_MAX_INCORRECT_GUESSES} incorrect guesses, aiming for{" "}
-        {NUM_CORRECT_SONGS_TO_WIN} songs correctly ordered to win. Drag and drop
-        the song card with the question marks where you think it lies
-        chronologically and click the 'Start' button to get started!
+        and {NUM_MAX_INCORRECT_GUESSES} incorrect guesses, aiming to get as many
+        correctly ordered songs as possible. Click the 'Start' button to get
+        started!
       </blockquote>
-      <p>
-        Note: Since this is app uses Spotify's API in development mode, I need
-        to individually add users in the app dashboard in order to access the
-        app. If you can't access the game, please email me your name and email
-        you use for Spotify (premium account is required) at{" "}
-        <a href="mailto:ellieinellietown@gmail.com">
-          ellieinellietown@gmail.com
-        </a>
-        .
-      </p>
-      <p>
-        Note #2: This is still *very much* a work in progress. I am having
-        issues getting the original release year for certain remastered songs,
-        so please don't get too frustrated!
-      </p>
-      {(isGameWon || isGameLost) && (
-        <GameOverDisplay isGameWon={isGameWon} isGameLost={isGameLost} />
+      <div
+        style={{
+          border: "2px dotted var(--color-border)",
+          borderRadius: "8px",
+          padding: "0.5em",
+          margin: "1em",
+        }}
+      >
+        <p>
+          Note: Since this is app uses Spotify's API in development mode, I need
+          to individually add users in the app dashboard in order to access the
+          app. If you can't access the game, please email me your name and email
+          you use for Spotify (premium account is required) at{" "}
+          <a href="mailto:ellieinellietown@gmail.com">
+            ellieinellietown@gmail.com
+          </a>
+          .
+        </p>
+        <p>
+          Note #2: This is still *very much* a work in progress. I am having
+          issues getting the original release year for certain remastered songs,
+          so please don't get too frustrated!
+        </p>
+      </div>
+      {isGameOver && (
+        <GameOverDisplay hasNewHighScore={score === highScore} score={score} />
       )}
+      <ScoreDisplay score={score} highScore={highScore} />
       {!!accessToken && !!contextUri && (
         <WebPlayback
           token={accessToken}
@@ -208,6 +214,21 @@ function MusicGame() {
         guessState={guessState}
       />
       <IncorrectlyGuessedSongs trackList={incorrectTracks} />
+    </div>
+  );
+}
+
+function ScoreDisplay({
+  score,
+  highScore,
+}: {
+  score: number;
+  highScore: number;
+}) {
+  return (
+    <div>
+      <h2>Score: {score}</h2>
+      <h2>High Score: {highScore}</h2>
     </div>
   );
 }
@@ -246,23 +267,19 @@ function IncorrectlyGuessedSongs({
 }
 
 function GameOverDisplay({
-  isGameWon,
-  isGameLost,
+  hasNewHighScore,
+  score,
 }: {
-  isGameWon: boolean;
-  isGameLost: boolean;
+  hasNewHighScore: boolean;
+  score: number;
 }) {
-  const backgroundColor = isGameWon
-    ? "#b8d0c3"
-    : isGameLost
-    ? "#d0b8b8"
-    : "none";
-  const text = isGameWon
-    ? "Wooo!!! You won!!! Here is a croissant 🥐"
-    : isGameLost
-    ? "Dang, no dice. Better luck next time, cowboy 😞"
-    : null;
-  return isGameWon || isGameLost ? (
+  // beat record
+  const backgroundColor = hasNewHighScore ? "#b8d0c3" : "#d0b8b8";
+  const text = hasNewHighScore
+    ? `Wooo!!! You got a new high score of ${score}!!! Here is a croissant 🥐`
+    : "Well, it was a good attempt. Better luck next time, cowboy 😞";
+
+  return (
     <div
       style={{
         background: backgroundColor,
@@ -274,7 +291,7 @@ function GameOverDisplay({
       <p>{text}</p>
       <PlayAgain />
     </div>
-  ) : null;
+  );
 }
 
 function PlayAgain() {
