@@ -1,4 +1,5 @@
 import React from "react";
+import styled from "@emotion/styled";
 import {
   arrayMove,
   useSortable,
@@ -17,7 +18,52 @@ import {
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import SongCard, { TrackInformation } from "./SongCard";
-import "./SongGuessingArea.css";
+
+// Keyframes are now defined in SongCard component
+
+// Styled components
+const SongGuessingScroll = styled.div`
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: clip;
+  -webkit-overflow-scrolling: touch;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black 10px,
+    black calc(100% - 10px),
+    transparent 100%
+  );
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black 10px,
+    black calc(100% - 10px),
+    transparent 100%
+  );
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+`;
+
+const SongGuessingRow = styled.div`
+  display: flex;
+  width: fit-content;
+  flex-direction: row;
+  align-items: flex-start;
+  margin: 1em 0em;
+  flex-wrap: nowrap; /* prevent wrapping so it scrolls horizontally */
+  gap: 8px;
+  padding: 0em 1em;
+
+  /* Prevent children from shrinking so the row can overflow */
+  & > * {
+    flex: 0 0 auto;
+  }
+`;
 
 // Just a normal sortable item — but will only be draggable for current track
 function SortableItem({
@@ -85,13 +131,9 @@ function SongGuessingArea({
     })
   );
 
-  // TODO: Use the styled-components library to have animation locally
-  const extraClass =
-    guessState === GuessState.Correct
-      ? "backgroundAnimatedCorrect"
-      : guessState === GuessState.Incorrect
-      ? "backgroundAnimatedIncorrect"
-      : "";
+  // Determine animation states
+  const isCorrect = guessState === GuessState.Correct;
+  const isIncorrect = guessState === GuessState.Incorrect;
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -123,8 +165,8 @@ function SongGuessingArea({
         items={sortedTracks}
         strategy={horizontalListSortingStrategy}
       >
-        <div className="song-guessing-scroll">
-          <div className="song-guessing-row">
+        <SongGuessingScroll>
+          <SongGuessingRow>
             {sortedTracks.map((track) => (
               <SortableItem
                 key={track.id}
@@ -142,15 +184,22 @@ function SongGuessingArea({
                       ? guessState === GuessState.NoGuess
                       : true
                   }
-                  extraClass={track.id === currentTrackId ? extraClass : ""}
+                  extraClass={
+                    track.id === currentTrackId ? "incorrect-guess" : ""
+                  }
+                  isCorrect={track.id === currentTrackId ? isCorrect : false}
+                  isIncorrect={
+                    track.id === currentTrackId ? isIncorrect : false
+                  }
                 />
               </SortableItem>
             ))}
-          </div>
-        </div>
+          </SongGuessingRow>
+        </SongGuessingScroll>
       </SortableContext>
     </DndContext>
   );
 }
 
 export default SongGuessingArea;
+export { SongGuessingScroll, SongGuessingRow };

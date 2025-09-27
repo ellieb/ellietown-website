@@ -1,10 +1,46 @@
 import React from "react";
-import "./MusicGame.css";
+import styled from "@emotion/styled";
 import SongGuessingArea from "./SongGuessingArea";
 import SongCard, { TrackInformation } from "./SongCard";
+import { SongGuessingScroll, SongGuessingRow } from "./SongGuessingArea";
 
 import { checkForAccessToken, auth } from "./SpotifyHelpers";
 import WebPlayback from "./WebPlayback";
+
+// Styled components
+
+const GameOverContainer = styled.div<{
+  isGameWon: boolean;
+  isGameLost: boolean;
+}>`
+  background: ${({ isGameWon, isGameLost }) =>
+    isGameWon ? "#b8d0c3" : isGameLost ? "#d0b8b8" : "none"};
+  border-radius: 8px;
+  padding: 0.5em;
+  margin: 1em;
+`;
+
+const PlayAgainButton = styled.button`
+  font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
+  font-size: 16px;
+  background-color: var(--color-button);
+  border-radius: 6px;
+  padding: 0.5em 1em;
+  margin: 4px;
+
+  &:hover:enabled {
+    background-color: var(--color-button-hover);
+  }
+
+  &:active:enabled {
+    background-color: var(--color-button-active);
+  }
+
+  &:disabled {
+    background-color: var(--color-button-disabled);
+    border-color: var(--color-button-border-disabled);
+  }
+`;
 
 // Completed TODOs
 // TODO: Investigate and fix transitions after guessing cause it's rough rn - DONE ✅
@@ -200,12 +236,9 @@ function MusicGame() {
         />
       )}
       {!accessToken && (
-        <button
-          className="btn-spotify-player"
-          onClick={onAuthorizeClickHandler}
-        >
+        <PlayAgainButton onClick={onAuthorizeClickHandler}>
           Authorize
-        </button>
+        </PlayAgainButton>
       )}
       <SongGuessingArea
         currentTrackId={currentTrackId}
@@ -250,8 +283,8 @@ function IncorrectlyGuessedSongs({
   return (
     <div>
       <h4>Song graveyard</h4>
-      <div className="song-guessing-scroll">
-        <div className="song-guessing-row">
+      <SongGuessingScroll>
+        <SongGuessingRow>
           {trackList.map((track) => (
             <SongCard
               key={track.id}
@@ -260,8 +293,8 @@ function IncorrectlyGuessedSongs({
               extraClass="incorrect-guess"
             />
           ))}
-        </div>
-      </div>
+        </SongGuessingRow>
+      </SongGuessingScroll>
     </div>
   );
 }
@@ -273,36 +306,26 @@ function GameOverDisplay({
   hasNewHighScore: boolean;
   score: number;
 }) {
-  // beat record
-  const backgroundColor = hasNewHighScore ? "#b8d0c3" : "#d0b8b8";
   const text = hasNewHighScore
     ? `Wooo!!! You got a new high score of ${score}!!! Here is a croissant 🥐`
     : "Well, it was a good attempt. Better luck next time, cowboy 😞";
 
   return (
-    <div
-      style={{
-        background: backgroundColor,
-        borderRadius: "8px",
-        padding: "0.5em",
-        margin: "1em",
-      }}
+    <GameOverContainer
+      isGameWon={hasNewHighScore}
+      isGameLost={!hasNewHighScore}
     >
       <p>{text}</p>
       <PlayAgain />
-    </div>
+    </GameOverContainer>
   );
 }
 
 function PlayAgain() {
   return (
-    <button
-      className="btn-spotify-player"
-      style={{ padding: "0.5em 1em" }}
-      onClick={() => window.location.reload()}
-    >
+    <PlayAgainButton onClick={() => window.location.reload()}>
       Play again???
-    </button>
+    </PlayAgainButton>
   );
 }
 

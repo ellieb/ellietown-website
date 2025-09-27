@@ -1,5 +1,196 @@
 import React from "react";
-import "./SongCard.css";
+import styled from "@emotion/styled";
+import { keyframes } from "@emotion/react";
+
+// Keyframes for animations
+const fadeIncorrect = keyframes`
+  0% {
+    background-color: #e59595;
+  }
+  100% {
+    background-color: var(--color-card);
+  }
+`;
+
+const fadeCorrect = keyframes`
+  0% {
+    background-color: #b0efb0;
+  }
+  100% {
+    background-color: var(--color-card);
+  }
+`;
+
+// Styled components
+const SongDisplay = styled.div<{ compact?: boolean }>`
+  display: inline-flex;
+  font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
+  justify-content: space-between;
+  min-height: 160px;
+  max-height: 160px;
+  width: 310px;
+  -webkit-transition: width 0.5s ease-in-out;
+  -moz-transition: width 0.5s ease-in-out;
+  -o-transition: width 0.5s ease-in-out;
+  transition: width 0.5s ease-in-out;
+  perspective: 1000px;
+
+  ${({ compact }) =>
+    compact &&
+    `
+    width: 160px;
+    gap: 0em;
+  `}
+`;
+
+const FlipCardInner = styled.div<{ isFlipped?: boolean }>`
+  position: relative;
+  width: 100%;
+  text-align: center;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+  transform: ${({ isFlipped }) => (isFlipped ? "rotateY(180deg)" : "none")};
+`;
+
+const HiddenSide = styled.div`
+  position: absolute;
+  padding: 8px;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  background-color: black;
+  line-height: 132px;
+  color: white;
+  font-size: 48px;
+`;
+
+const AllSongInfo = styled.div<{
+  extraClass?: string;
+  isCorrect?: boolean;
+  isIncorrect?: boolean;
+}>`
+  position: absolute;
+  padding: 8px;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  background-color: var(--color-card);
+  transform: rotateY(180deg);
+
+  ${({ extraClass }) =>
+    extraClass === "incorrect-guess" &&
+    `
+    background-color: #d4d4d4;
+  `}
+
+  ${({ isCorrect }) =>
+    isCorrect &&
+    `
+    animation: ${fadeCorrect} 5s ease-in-out;
+  `}
+
+  ${({ isIncorrect }) =>
+    isIncorrect &&
+    `
+    animation: ${fadeIncorrect} 5s ease-in-out;
+  `}
+`;
+
+const AlbumCover = styled.img<{ compact?: boolean }>`
+  border-radius: 5px;
+  object-fit: contain;
+  width: 140px;
+  -webkit-transition: width 0.5s ease-in-out;
+  -moz-transition: width 0.5s ease-in-out;
+  -o-transition: width 0.5s ease-in-out;
+  transition: width 0.5s ease-in-out;
+
+  ${({ compact }) =>
+    compact &&
+    `
+    width: 0;
+    visibility: hidden;
+  `}
+`;
+
+const SongInformation = styled.div`
+  display: inline-grid;
+  grid-template-areas:
+    "name"
+    "year"
+    "album-info";
+  grid-template-rows: 30px 70px 40px;
+  grid-template-columns: auto;
+  text-align: center;
+  justify-content: center;
+  min-width: 140px;
+`;
+
+const SongName = styled.p<{ extraClass?: string }>`
+  grid-area: name;
+  font-size: 12px;
+  color: var(--color-text-subtitle);
+  margin: 0px;
+
+  ${({ extraClass }) =>
+    extraClass === "incorrect-guess" &&
+    `
+    color: #6b6b6b;
+  `}
+`;
+
+const SongArtist = styled.p<{ extraClass?: string }>`
+  grid-area: artist;
+  font-size: 14px;
+  color: var(--color-text);
+  margin: 0px;
+
+  ${({ extraClass }) =>
+    extraClass === "incorrect-guess" &&
+    `
+    color: #383838;
+  `}
+`;
+
+const SongAlbum = styled.p<{ extraClass?: string }>`
+  font-size: 12px;
+  font-style: italic;
+  color: var(--color-text-subtitle);
+  margin: 0px;
+
+  ${({ extraClass }) =>
+    extraClass === "incorrect-guess" &&
+    `
+    color: #6b6b6b;
+  `}
+`;
+
+const SongYear = styled.p<{ extraClass?: string }>`
+  grid-area: year;
+  font-size: 48px;
+  color: var(--color-text);
+  margin: 0px;
+
+  ${({ extraClass }) =>
+    extraClass === "incorrect-guess" &&
+    `
+    color: #383838;
+  `}
+`;
+
+const SongAlbumInfo = styled.div`
+  grid-area: album-info;
+  align-self: end;
+`;
 
 export type TrackInformation = {
   id: string;
@@ -16,38 +207,39 @@ function SongCard({
   compact = false,
   hidden = false,
   extraClass = "",
+  isCorrect = false,
+  isIncorrect = false,
 }: {
   track: TrackInformation;
   compact?: boolean;
   hidden?: boolean;
   extraClass?: string;
+  isCorrect?: boolean;
+  isIncorrect?: boolean;
 }) {
   const { name, artist, album, year, albumCoverUrl } = track;
 
   return (
-    <div className={"song-display ".concat(compact ? "compact" : "")}>
-      <div
-        className="flip-card-inner"
-        style={hidden ? {} : { transform: "rotateY(180deg)" }}
-      >
-        <div className="hidden">????</div>
-        <div className={"all-song-info ".concat(extraClass ? extraClass : "")}>
-          <img
-            className={"song-album-cover ".concat(compact ? "compact" : "")}
-            src={albumCoverUrl}
-            alt="album cover"
-          />
-          <div className="song-information">
-            <p className="song-name">{name}</p>
-            <p className="song-year">{year}</p>
-            <div className="song-album-info">
-              <p className="song-artist">{artist}</p>
-              <p className="song-album">{album}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <SongDisplay compact={compact}>
+      <FlipCardInner isFlipped={!hidden}>
+        <HiddenSide>????</HiddenSide>
+        <AllSongInfo
+          extraClass={extraClass}
+          isCorrect={isCorrect}
+          isIncorrect={isIncorrect}
+        >
+          <AlbumCover compact={compact} src={albumCoverUrl} alt="album cover" />
+          <SongInformation>
+            <SongName extraClass={extraClass}>{name}</SongName>
+            <SongYear extraClass={extraClass}>{year}</SongYear>
+            <SongAlbumInfo>
+              <SongArtist extraClass={extraClass}>{artist}</SongArtist>
+              <SongAlbum extraClass={extraClass}>{album}</SongAlbum>
+            </SongAlbumInfo>
+          </SongInformation>
+        </AllSongInfo>
+      </FlipCardInner>
+    </SongDisplay>
   );
 }
 

@@ -115,7 +115,7 @@ function MyStuff() {
       {/* <div>media I love</div> */}
 
       <Section title={"Kombucha"}>
-        <p>
+        <div>
           I have been making kombucha since around May 2025. I want to document
           any particularly delicious flavour combinations I try out. Some of my
           favourites so far have been:
@@ -129,7 +129,7 @@ function MyStuff() {
           The next thing I want to experiment with is different varieties of
           tea, I have just been using orange pekoe so far.
           {/* TODO: Talk about the Noma Guide to Fermentation */}
-        </p>
+        </div>
       </Section>
       {/* <Section title={"Knit and Crochet"}></Section> */}
     </BasicLayout>

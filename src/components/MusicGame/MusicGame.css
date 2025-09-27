@@ -1,9 +1,0 @@
-* {
-  box-sizing: border-box;
-}
-
-.ordered-songs {
-  display: flex;
-  gap: 1em;
-  flex-direction: row;
-}

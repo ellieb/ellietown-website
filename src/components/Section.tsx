@@ -1,5 +1,14 @@
 import React from "react";
-import "./Section.css";
+import styled from "@emotion/styled";
+
+// Styled components
+const SectionContainer = styled.div`
+  border: 2px var(--color-border) dotted;
+  border-radius: 8px;
+  margin: 1em;
+  padding: 0.5em 2em 2em;
+  text-align: left;
+`;
 
 function Section({
   title,
@@ -9,10 +18,10 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="section">
+    <SectionContainer>
       {!!title && <h3>{title}</h3>}
       {children}
-    </div>
+    </SectionContainer>
   );
 }
 

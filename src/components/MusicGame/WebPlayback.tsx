@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import "./WebPlayback.css";
+import styled from "@emotion/styled";
 import {
   togglePlaybackShuffle,
   transferPlayback,
@@ -12,6 +12,33 @@ import { TrackInformation } from "./SongCard";
 // TODO: Add volume toggle
 // TODO: Add cleanup funtions for listeners
 // TODO: Make sure we don't replay the first random song we add!
+
+// Styled components
+const MainWrapper = styled.div`
+  /* Main wrapper styles if needed */
+`;
+
+const SpotifyButton = styled.button`
+  font-family: "Pirata One", "UnifrakturCook", system-ui, "celticBit";
+  font-size: 16px;
+  background-color: var(--color-button);
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin: 4px;
+
+  &:hover:enabled {
+    background-color: var(--color-button-hover);
+  }
+
+  &:active:enabled {
+    background-color: var(--color-button-active);
+  }
+
+  &:disabled {
+    background-color: var(--color-button-disabled);
+    border-color: var(--color-button-border-disabled);
+  }
+`;
 
 enum GuessState {
   Correct,
@@ -309,12 +336,11 @@ function WebPlayback({
   const buttonText = isPaused ? "PLAY" : "PAUSE";
 
   return (
-    <div className="main-wrapper">
+    <MainWrapper>
       {isLoading ? (
         <p>Loading..</p>
       ) : !hasStarted ? (
-        <button
-          className="btn-spotify-player"
+        <SpotifyButton
           onClick={async () => {
             setHasStarted(true);
             if (sortedTracks.length === 0) {
@@ -329,11 +355,10 @@ function WebPlayback({
           }}
         >
           START
-        </button>
+        </SpotifyButton>
       ) : (
         <>
-          <button
-            className="btn-spotify-player"
+          <SpotifyButton
             onClick={async () => {
               if (currentContextUri !== contextUri) {
                 await startOrResumePlayback(contextUri, deviceId);
@@ -343,10 +368,9 @@ function WebPlayback({
             }}
           >
             {buttonText}
-          </button>
+          </SpotifyButton>
 
-          <button
-            className="btn-spotify-player"
+          <SpotifyButton
             onClick={async () => {
               onSkip(async () => {
                 await player.nextTrack();
@@ -355,10 +379,9 @@ function WebPlayback({
             disabled={skipDisabled}
           >
             SKIP
-          </button>
+          </SpotifyButton>
 
-          <button
-            className="btn-spotify-player"
+          <SpotifyButton
             onClick={async () => {
               await onGuess(async () => {
                 await player.nextTrack();
@@ -367,10 +390,10 @@ function WebPlayback({
             disabled={guessDisabled}
           >
             GUESS
-          </button>
+          </SpotifyButton>
         </>
       )}
-    </div>
+    </MainWrapper>
   );
 }
 
