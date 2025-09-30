@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled";
-import { keyframes } from "@emotion/react";
+import { keyframes, css } from "@emotion/react";
 
 // Keyframes for animations
 const fadeIncorrect = keyframes`
@@ -94,15 +94,15 @@ const AllSongInfo = styled.div<{
 
   ${({ isCorrect }) =>
     isCorrect &&
-    `
-    animation: ${fadeCorrect} 5s ease-in-out;
-  `}
+    css`
+      animation: ${fadeCorrect} 5s ease-in-out;
+    `}
 
   ${({ isIncorrect }) =>
     isIncorrect &&
-    `
-    animation: ${fadeIncorrect} 5s ease-in-out;
-  `}
+    css`
+      animation: ${fadeIncorrect} 5s ease-in-out;
+    `}
 `;
 
 const AlbumCover = styled.img<{ compact?: boolean }>`
