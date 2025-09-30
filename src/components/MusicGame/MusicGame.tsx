@@ -4,7 +4,13 @@ import SongGuessingArea from "./SongGuessingArea";
 import SongCard, { TrackInformation } from "./SongCard";
 import { SongGuessingScroll, SongGuessingRow } from "./SongGuessingArea";
 
-import { checkForAccessToken, auth } from "./SpotifyHelpers";
+import {
+  checkForAccessToken,
+  auth,
+  PKCETokenStorage,
+  SPOTIFY_CONFIG,
+} from "./SpotifyHelpers";
+import { TokenManager } from "./TokenManager";
 import WebPlayback from "./WebPlayback";
 
 // Styled components
@@ -49,9 +55,9 @@ const PlayAgainButton = styled.button`
 // TODO: Make a nice initial experience (Press "Start" then reveal first card.) - DONE ✅
 // TODO: Transition album cover show/hide nicely - DONE ✅
 // TODO: Make it s.t. you have a high score rather than a win and store it in a cookie - DONE ✅
+// TODO: Fix refresh token issues - DONE ✅
 
 // Somewhat prioritized TODOs
-// TODO: Fix refresh token issues
 // TODO: Clean up and organize
 // TODO: Use provider for spotify auth
 // TODO: When losing on a guess, continue playing the current song rather than skipping to the next one? or just stop playing music../?
@@ -71,7 +77,7 @@ enum GuessState {
   Skip,
 }
 
-const NUM_MAX_INCORRECT_GUESSES = 1;
+const NUM_MAX_INCORRECT_GUESSES = 3;
 const NUM_MAX_SKIPS = 2;
 
 function MusicGame() {
@@ -95,6 +101,9 @@ function MusicGame() {
   );
   const [score, setScore] = React.useState(0);
 
+  // Token management
+  const tokenManagerRef = React.useRef<TokenManager | null>(null);
+
   const isGameOver =
     incorrectTracks.length - numSkips >= NUM_MAX_INCORRECT_GUESSES;
 
@@ -107,23 +116,46 @@ function MusicGame() {
   };
 
   React.useEffect(() => {
-    const refreshTokenAndCheckPlayback = async () => {
+    const initializeTokenManager = async () => {
+      if (!spotifyClientId) return;
+
+      const tokenStorage = new PKCETokenStorage();
+
+      // Initialize token manager with proactive refresh
+      tokenManagerRef.current = new TokenManager(
+        SPOTIFY_CONFIG,
+        tokenStorage,
+        (newToken) => {
+          setAccessToken(newToken);
+        }
+      );
+
+      // Check for existing token and start proactive refresh
       const newAccessToken = await checkForAccessToken();
       if (newAccessToken !== accessToken) {
         setAccessToken(newAccessToken);
       }
+
+      // Start proactive token refresh
+      tokenManagerRef.current.startProactiveRefresh();
     };
-    // on page load, check if we have an access token or code
-    refreshTokenAndCheckPlayback();
+
+    initializeTokenManager();
+
+    // Cleanup on unmount
+    return () => {
+      if (tokenManagerRef.current) {
+        tokenManagerRef.current.stopProactiveRefresh();
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [spotifyClientId]);
 
   const highScore = Number(localStorage.getItem("highScore")) || 0;
 
   const onSkip = async (callback: () => void) => {
     setNumSkips((prevNumSkips) => prevNumSkips + 1);
     setGuessState(GuessState.Skip);
-    // maybe we want a little reveal??
     setTimeout(() => {
       const incorrectGuess = sortedTracks.find(
         (track) => track.id === currentTrackId

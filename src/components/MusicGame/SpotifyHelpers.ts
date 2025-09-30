@@ -43,9 +43,9 @@ export interface CurrentToken {
 
 // Data structure to manage Spotify client instances
 export interface SpotifyClientConfig {
-  clientID: string;
-  redirectURL: string;
-  scope: string;
+  readonly clientID: string;
+  readonly redirectURL: string;
+  readonly scope: string;
 }
 
 export interface SpotifyClientInstance {
@@ -94,7 +94,7 @@ export class PKCETokenStorage implements CurrentToken {
   };
 }
 
-const spotifyConfig: SpotifyClientConfig = {
+export const SPOTIFY_CONFIG: SpotifyClientConfig = {
   clientID: process.env.REACT_APP_SPOTIFY_CLIENT_ID || "",
   redirectURL:
     process.env.REACT_APP_SPOTIFY_REDIRECT_URL || window.location.href,
@@ -167,7 +167,7 @@ export async function getAuthenticatedClient(): Promise<SpotifyClientInstance | 
       if (expiresAt.getTime() > new Date().getTime()) {
         // Token is still valid
         const clientInstance = await getOrCreateSpotifyClient(
-          spotifyConfig,
+          SPOTIFY_CONFIG,
           tokenStorage.accessToken
         );
         return clientInstance;
@@ -315,8 +315,8 @@ export const checkForAccessToken = async () => {
   if (code) {
     const token = await getToken(
       code,
-      spotifyConfig.clientID,
-      spotifyConfig.redirectURL
+      SPOTIFY_CONFIG.clientID,
+      SPOTIFY_CONFIG.redirectURL
     );
     currentToken.save(token);
 
@@ -340,10 +340,10 @@ export const checkForAccessToken = async () => {
     currentToken.accessToken &&
     currentToken.expiresAt &&
     new Date(currentToken.expiresAt).getTime() < new Date().getTime() &&
-    currentToken.refreshToken
+    !!currentToken.refreshToken
   ) {
     // use refresh token to reauth
-    const token = await refreshToken(spotifyConfig.clientID, currentToken);
+    const token = await refreshToken(SPOTIFY_CONFIG.clientID, currentToken);
     currentToken.save(token);
   }
   return currentToken.accessToken;
@@ -391,11 +391,11 @@ export const auth = async () => {
 
   const params = {
     response_type: "code",
-    client_id: spotifyConfig.clientID,
-    scope: spotifyConfig.scope,
+    client_id: SPOTIFY_CONFIG.clientID,
+    scope: SPOTIFY_CONFIG.scope,
     code_challenge_method: "S256",
     code_challenge: codeChallenge,
-    redirect_uri: spotifyConfig.redirectURL,
+    redirect_uri: SPOTIFY_CONFIG.redirectURL,
   };
   const authUrl = new URL("https://accounts.spotify.com/authorize");
   authUrl.search = new URLSearchParams(params).toString();
