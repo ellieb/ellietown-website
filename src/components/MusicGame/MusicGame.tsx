@@ -50,17 +50,19 @@ const PlayAgainButton = styled.button`
 // TODO: Transition album cover show/hide nicely - DONE ✅
 // TODO: Make it s.t. you have a high score rather than a win and store it in a cookie - DONE ✅
 
-// Unprioritized TODOs
-
+// Somewhat prioritized TODOs
+// TODO: Fix refresh token issues
+// TODO: Clean up and organize
+// TODO: Use provider for spotify auth
 // TODO: When losing on a guess, continue playing the current song rather than skipping to the next one? or just stop playing music../?
 // TODO: Update styling so it's cute (and make the graveyard look a little different)
-// TODO: Fix refresh token issues
 // TODO: Handle for case when current song ends and next begins (increase skip?? or just pause until they make a guess?)
 // TODO: (LATER) Let users pass in their own playlist uris
 // TODO: Reset shuffle state back to normal when done
 // TODO: Make sure we are following spotify's rules about playing/displaying music
 // TODO: Make sure there are never repeats
 // TODO: Mobile friendly
+// TODO: Logout???
 
 enum GuessState {
   Correct,
