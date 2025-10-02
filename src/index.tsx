@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router";
 import "./index.css";
-import App from "./App";
+import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import FunStuff from "./pages/FunStuff";
 import MyStuff from "./pages/MyStuff";
@@ -18,7 +18,7 @@ root.render(
   <BrowserRouter>
     {/* <React.StrictMode> */}
     <Routes>
-      <Route index element={<App />} />
+      <Route index element={<Home />} />
       <Route path="/about" element={<About />} />
       <Route path="/my-stuff" element={<MyStuff />} />
       <Route path="/fun-stuff" element={<FunStuff />} />

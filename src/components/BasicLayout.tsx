@@ -4,7 +4,6 @@ import styled from "@emotion/styled";
 import { keyframes } from "@emotion/react";
 
 // TODO: Inject GlobalStyles in all pages by default (provider?)
-// TODO: clean up routing (are we using App.tsx properly?)
 
 // Keyframes for animations
 const blinker = keyframes`
