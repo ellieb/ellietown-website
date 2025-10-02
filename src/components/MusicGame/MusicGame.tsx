@@ -13,6 +13,37 @@ import {
 import { TokenManager } from "./TokenManager";
 import WebPlayback from "./WebPlayback";
 
+// Completed TODOs
+// TODO: Investigate and fix transitions after guessing cause it's rough rn - DONE ✅
+// TODO: Also add animation when showing song information - DONE ✅
+// TODO: get oldest release date you can from spotify - SOMEWHAT done 🟡
+// TODO: Make a nice initial experience (Press "Start" then reveal first card.) - DONE ✅
+// TODO: Transition album cover show/hide nicely - DONE ✅
+// TODO: Make it s.t. you have a high score rather than a win and store it in a cookie - DONE ✅
+// TODO: Fix refresh token issues - DONE ✅
+
+// Somewhat prioritized TODOs
+// TODO: Figure out whatever is hogging resources and kill it!!!
+// TODO: Clean up and organize
+// TODO: Use provider for spotify auth
+// TODO: When losing on a guess, continue playing the current song rather than skipping to the next one? or just stop playing music../?
+// TODO: Update styling so it's cute (and make the graveyard look a little different)
+// TODO: Handle for case when current song ends and next begins (increase skip?? or just pause until they make a guess?)
+// TODO: (LATER) Let users pass in their own playlist uris
+// TODO: Reset shuffle state back to normal when done
+// TODO: Make sure we are following spotify's rules about playing/displaying music
+// TODO: Make sure there are never repeats
+// TODO: Mobile friendly
+// TODO: Logout???
+// TODO: Redesign w help of chatgpt
+//    SUB TODO: Move instructions into a collapsible panel or modal so they don’t dominate the top of the screen after the user has read them once
+//    SUB TODO: Place the score and high score in a small scoreboard area (top-right or centered above cards).
+//    SUB TODO: Use larger, styled buttons (rounded with hover effects). Differentiate actions with color (e.g., Play = green, Skip = grey, Guess = blue).
+//    SUB TODO: Add a drop zone indicator (like a glowing border or arrow) when the user drags a card over a slot
+//    SUB TODO:
+//    SUB TODO:
+//    SUB TODO:
+
 // Styled components
 
 const GameOverContainer = styled.div<{
@@ -47,28 +78,6 @@ const PlayAgainButton = styled.button`
     border-color: var(--color-button-border-disabled);
   }
 `;
-
-// Completed TODOs
-// TODO: Investigate and fix transitions after guessing cause it's rough rn - DONE ✅
-// TODO: Also add animation when showing song information - DONE ✅
-// TODO: get oldest release date you can from spotify - SOMEWHAT done 🟡
-// TODO: Make a nice initial experience (Press "Start" then reveal first card.) - DONE ✅
-// TODO: Transition album cover show/hide nicely - DONE ✅
-// TODO: Make it s.t. you have a high score rather than a win and store it in a cookie - DONE ✅
-// TODO: Fix refresh token issues - DONE ✅
-
-// Somewhat prioritized TODOs
-// TODO: Clean up and organize
-// TODO: Use provider for spotify auth
-// TODO: When losing on a guess, continue playing the current song rather than skipping to the next one? or just stop playing music../?
-// TODO: Update styling so it's cute (and make the graveyard look a little different)
-// TODO: Handle for case when current song ends and next begins (increase skip?? or just pause until they make a guess?)
-// TODO: (LATER) Let users pass in their own playlist uris
-// TODO: Reset shuffle state back to normal when done
-// TODO: Make sure we are following spotify's rules about playing/displaying music
-// TODO: Make sure there are never repeats
-// TODO: Mobile friendly
-// TODO: Logout???
 
 enum GuessState {
   Correct,
@@ -219,7 +228,7 @@ function MusicGame() {
 
   return (
     <div>
-      <h3>Music Sorting Game</h3>
+      <h1>Music Sorting Game</h1>
       <blockquote>
         Try and sort these songs in order of the year of the release date - left
         is the oldest, right is the most recent. You get {NUM_MAX_SKIPS} skips
