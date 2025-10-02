@@ -95,13 +95,13 @@ const AllSongInfo = styled.div<{
   ${({ isCorrect }) =>
     isCorrect &&
     css`
-      animation: ${fadeCorrect} 5s ease-in-out;
+      animation: ${fadeCorrect} 6s ease-in-out;
     `}
 
   ${({ isIncorrect }) =>
     isIncorrect &&
     css`
-      animation: ${fadeIncorrect} 5s ease-in-out;
+      animation: ${fadeIncorrect} 6s ease-in-out;
     `}
 `;
 
