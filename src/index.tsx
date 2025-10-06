@@ -7,7 +7,7 @@ import NotFound from "./pages/NotFound";
 import FunStuff from "./pages/FunStuff";
 import MyStuff from "./pages/MyStuff";
 import SongGuessingGame from "./pages/SongGuessingGame";
-
+import BirdFeed from "./pages/BirdFeed";
 import About from "./pages/About";
 import reportWebVitals from "./reportWebVitals";
 
@@ -26,6 +26,7 @@ root.render(
         path="/fun-stuff/song-guessing-game"
         element={<SongGuessingGame />}
       />
+      <Route path="/fun-stuff/bird-feed" element={<BirdFeed />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
     {/* </React.StrictMode> */}

@@ -9,7 +9,8 @@ function FunStuff() {
         There is not much - YET - but check out{" "}
         <a href={"/fun-stuff/song-guessing-game"}>
           this Hitster-inspired music guessing game I made!
-        </a>
+        </a>{" "}
+        ...or <a href={"/fun-stuff/bird-feed"}>this BirdNET-Pi bird feed!</a>
       </p>
       {/* <div>games</div>
       <div>blinkies</div>
