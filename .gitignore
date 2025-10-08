@@ -25,3 +25,9 @@ yarn-error.log*
 
 # Local Netlify folder
 .netlify
+
+# Ignore almost all aws files
+/aws/lambdas/**/*.zip
+/aws/lambdas/**/node_modules
+/aws/lambdas/**/*.pkg
+/aws/lambdas/**/*.json

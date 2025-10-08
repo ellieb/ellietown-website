@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import BasicLayout from "../components/BasicLayout";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 type BirdInfo = {
   _id: string;
@@ -43,8 +49,8 @@ function FunStuff() {
     <BasicLayout>
       <p>
         I set up a raspberrypi with a mic with BirdNET-Pi installed and it
-        records and identifies bird calls. Twice a day, the data is synced onto
-        the cloud for querying here.
+        records and identifies bird calls. Each hour, the data is synced from
+        the pi to an aws RDS instance, and then can be queried here.
       </p>
       <p>Most recent birds identified:</p>
       <div>
@@ -133,7 +139,9 @@ function BirdCard({
   bird: BirdInfoWithImage;
   imgWidth: number;
 }) {
-  const date = new Date(bird.date + " " + bird.time); // this is in Pacific Time
+  const dateStr = bird.date.slice(0, 10) + " " + bird.time;
+  const dayjsDate = dayjs(dateStr).utcOffset("America/Vancouver");
+
   return (
     <BirdCardDisplay>
       <img
@@ -144,7 +152,7 @@ function BirdCard({
         object-fit={"cover"}
       ></img>
       <BirdCardInfo>
-        <p>{date.toDateString() + " " + date.toLocaleTimeString()}</p>
+        <p>{dayjsDate.format("YYYY-MM-DD hh:mm:ss a")}</p>
         <h2>{bird.com_name}</h2>
         <p>
           Confidence: <b>{Math.round(bird.confidence * 100)}%</b>
