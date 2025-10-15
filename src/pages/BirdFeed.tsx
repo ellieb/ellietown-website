@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
+import CircularProgress from "@mui/material/CircularProgress";
 import styled from "@emotion/styled";
 import BasicLayout from "../components/BasicLayout";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import _ from "lodash";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 type BirdInfo = {
-  _id: string;
+  id: string;
   com_name: string;
   date: string;
   time: string;
@@ -20,24 +22,36 @@ type BirdInfoWithImage = BirdInfo & { imgSrc: string };
 
 // TODO: Sync and upload histogram!
 
-function FunStuff() {
+function BirdFeed() {
   const imgWidth = 200;
   const [birds, setBirds] = useState<BirdInfoWithImage[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBirdsWithImages = async () => {
       const response = await fetch("/.netlify/functions/birds");
-      const body = await response.json();
-      if (response.status !== 200) {
-        throw new Error(body.error.message);
+      if (!response.ok) {
+        const errText = await response.text().catch(() => "");
+        throw new Error(
+          `Failed to fetch birds: ${response.status} ${response.statusText} ${errText}`
+        );
+      }
+      const body: BirdInfo[] = await response.json();
+      // get images of each bird
+      const birdNameToImg: Record<string, string | null> = {};
+      const uniqueBirdNames = _.uniq(_.map(body, "com_name")); //Array.from(new Set(body.map((b) => b.com_name)));
+      for (let birdName of uniqueBirdNames) {
+        const imgSrc = await fetchBirdImage(birdName, imgWidth);
+        birdNameToImg[birdName] = imgSrc;
       }
 
-      for (let bird of body) {
-        const imgSrc = await fetchBirdImage(bird.com_name, imgWidth);
-        bird.imgSrc = imgSrc;
-      }
+      const bodyWithImages: BirdInfoWithImage[] = body.map((b) => ({
+        ...b,
+        imgSrc: birdNameToImg[b.com_name] ?? "",
+      }));
 
-      setBirds(body);
+      setLoading(false);
+      setBirds(bodyWithImages);
 
       return body;
     };
@@ -53,10 +67,14 @@ function FunStuff() {
         the pi to an aws RDS instance, and then can be queried here.
       </p>
       <p>Most recent birds identified:</p>
-      <div>
-        {birds.map((bird) => (
-          <BirdCard bird={bird} key={bird._id} imgWidth={imgWidth} />
-        ))}
+      <div style={{ marginTop: "2.5em", marginBottom: "2.5em" }}>
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          birds.map((bird) => (
+            <BirdCard bird={bird} key={bird.id} imgWidth={imgWidth} />
+          ))
+        )}
       </div>
     </BasicLayout>
   );
@@ -162,4 +180,4 @@ function BirdCard({
   );
 }
 
-export default FunStuff;
+export default BirdFeed;

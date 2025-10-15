@@ -1,5 +1,6 @@
 import { Context } from "@netlify/functions";
 
+// TODO: cache results, speed everything uP!
 export default async (request: Request, context: Context) => {
   try {
     const response = await fetch(process.env.LAMBDA_URI + "/recent-birds", {
