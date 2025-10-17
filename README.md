@@ -1,8 +1,19 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/4fef0c0a-6b73-4b13-b6e7-92293f23a4a3/deploy-status)](https://app.netlify.com/projects/delightful-buttercream-7ee72f/deploys)
 
-# Getting Started with Create React App
+# Welcome to Ellietown!!!!
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the repo for my personal website that is just a space for me to create projects and have fun with software development. In terms of projects, there curerntly a Spotify music guessing game and a live bird feed. This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app). 
+<p align="center">
+  <img width="466" height="438" alt="music guessing game" src="https://github.com/user-attachments/assets/c69c4e8b-3228-47ee-97d4-60c516b9f79c" />
+</p>
+<p align="center">A little peak into the music guessing game. High score of 0...</p>
+
+<p align="center">
+  <img width="466" height="438" alt="live bird feed" src="https://github.com/user-attachments/assets/f257d4b8-980b-4fb7-8f93-9a1b1012b2b3" />
+</p>
+<p align="center">A screenshot of the birds identified by BirdNET-Pi! Northern Flickers everywhere!</p>
+
+
 
 ## Available Scripts
 
