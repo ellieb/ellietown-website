@@ -95,9 +95,9 @@ export class PKCETokenStorage implements CurrentToken {
 }
 
 export const SPOTIFY_CONFIG: SpotifyClientConfig = {
-  clientID: process.env.REACT_APP_SPOTIFY_CLIENT_ID || "",
+  clientID: process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || "",
   redirectURL:
-    process.env.REACT_APP_SPOTIFY_REDIRECT_URL || window.location.href,
+    process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URL || window.location.href,
   scope:
     "user-read-playback-state user-modify-playback-state user-read-currently-playing streaming user-read-email user-read-private",
 };
@@ -557,7 +557,7 @@ export async function togglePlaybackShuffle(
     const errorObject = JSON.parse(err.response);
     console.error(errorObject);
     throw new Error(
-      `Issue with getCurrentlyPlayingTrack  - ${errorObject.error.message}`
+      `Issue with togglePlaybackShuffle  - ${errorObject.error.message}`
     );
   }
 

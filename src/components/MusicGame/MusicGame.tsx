@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import styled from "@emotion/styled";
 import SongGuessingArea from "./SongGuessingArea";
@@ -90,8 +91,8 @@ const NUM_MAX_INCORRECT_GUESSES = 3;
 const NUM_MAX_SKIPS = 2;
 
 function MusicGame() {
-  const spotifyClientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
-  const contextUri = process.env.REACT_APP_DEFAULT_PLAYLIST_ID;
+  const spotifyClientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
+  const contextUri = process.env.NEXT_PUBLIC_DEFAULT_PLAYLIST_ID;
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null
   );
