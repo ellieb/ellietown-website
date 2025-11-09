@@ -36,3 +36,9 @@ yarn-error.log*
 /aws/lambdas/**/node_modules
 /aws/lambdas/**/*.pkg
 /aws/lambdas/**/*.json
+
+# Ignore scripts folder
+/scripts
+
+# Ignore vscode settings
+.vscode/
