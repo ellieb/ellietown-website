@@ -32,7 +32,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "npx serve@latest ./build"
+    "start": "npx serve@latest out"
   },
   "eslintConfig": {
     "extends": [
