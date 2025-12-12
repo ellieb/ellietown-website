@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
 import styled from "@emotion/styled";
 import BasicLayout from "../components/BasicLayout";
 import dayjs from "dayjs";
@@ -61,6 +62,13 @@ function BirdFeed() {
 
   return (
     <BasicLayout>
+      <Alert
+        severity="error"
+        sx={{ borderRadius: "10px", fontFamily: "Pixelify Sans" }}
+      >
+        Unfortunately, my microphone broke. Bird feed is paused until further
+        notice. 😔
+      </Alert>
       <p>
         I set up a raspberrypi with a mic with BirdNET-Pi installed and it
         records and identifies bird calls. Each hour, the data is synced from
