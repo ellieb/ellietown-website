@@ -24,10 +24,12 @@ function Home() {
         {/* TODO: Move these following sections to the about page when there is enough 
       content to have two separate pages */}
         <Section title={"About me"}>
-          I am (sometimes) a software developer and have recently decided to
-          make a lil personal website! The idea for this project is to give
-          myself a personal space to play around with web development, get a
-          little bit of practice, and have fun.
+          <p>
+            I am (sometimes) a software developer and have recently decided to
+            make a lil personal website! The idea for this project is to give
+            myself a personal space to play around with web development, get a
+            little bit of practice, and have fun.
+          </p>
         </Section>
 
         <Section title={"About this site"}>

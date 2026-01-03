@@ -22,14 +22,28 @@ const Layout = styled.div<{
   gridTemplateRows: string;
   gridTemplateAreas: string;
 }>`
-  max-width: 80vw;
-  margin: 0.5em auto;
+  max-width: 95vw;
+  margin: 0.25em auto;
   display: grid;
   grid-gap: 0.5em;
   grid-template-columns: ${({ gridTemplateColumns }) => gridTemplateColumns};
   grid-template-rows: ${({ gridTemplateRows }) => gridTemplateRows};
   grid-template-areas: ${({ gridTemplateAreas }) => gridTemplateAreas};
   min-height: 100vh;
+
+  /* Tablets */
+  @media (min-width: 768px) {
+    max-width: 80vw;
+    margin: 0.5em auto;
+    grid-gap: 0.5em;
+  }
+
+  /* Desktop */
+  @media (min-width: 1024px) {
+    max-width: 80vw;
+    margin: 0.5em auto;
+    grid-gap: 1em;
+  }
 `;
 
 const Header = styled.header`
@@ -52,9 +66,19 @@ const MainContent = styled.div`
   grid-area: main;
   min-width: 0; /* used to make overflow scrolling work somehow */
   background-color: var(--color-content-background);
-  padding: 20px;
+  padding: 0px;
   border: var(--main-border);
   border-radius: 10px;
+
+  /* Tablets */
+  @media (min-width: 768px) {
+    padding: 10px;
+  }
+
+  /* Desktop */
+  @media (min-width: 1024px) {
+    padding: 20px;
+  }
 `;
 
 const Footer = styled.div`
