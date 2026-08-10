@@ -25,6 +25,7 @@ type BirdInfoWithImage = BirdInfo & { imgSrc: string };
 
 function BirdFeed() {
   const imgWidth = 200;
+  const showError = process.env.NEXT_PUBLIC_BIRD_APP_BROKEN === "true";
   const [birds, setBirds] = useState<BirdInfoWithImage[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +35,7 @@ function BirdFeed() {
       if (!response.ok) {
         const errText = await response.text().catch(() => "");
         throw new Error(
-          `Failed to fetch birds: ${response.status} ${response.statusText} ${errText}`
+          `Failed to fetch birds: ${response.status} ${response.statusText} ${errText}`,
         );
       }
       const body: BirdInfo[] = await response.json();
@@ -62,13 +63,15 @@ function BirdFeed() {
 
   return (
     <BasicLayout>
-      <Alert
-        severity="error"
-        sx={{ borderRadius: "10px", fontFamily: "Pixelify Sans" }}
-      >
-        Unfortunately, my microphone broke. Bird feed is paused until further
-        notice. 😔
-      </Alert>
+      {showError && (
+        <Alert
+          severity="error"
+          sx={{ borderRadius: "10px", fontFamily: "Pixelify Sans" }}
+        >
+          Unfortunately, my microphone broke. Bird feed is paused until further
+          notice. 😔
+        </Alert>
+      )}
       <p>
         I set up a raspberrypi with a mic with BirdNET-Pi installed and it
         records and identifies bird calls. Each hour, the data is synced from
@@ -112,7 +115,7 @@ async function fetchBirdImage(comName: string, width: number) {
   }
 
   const fileUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&titles=${encodeURIComponent(
-    file.title
+    file.title,
   )}&prop=imageinfo&iiprop=url&iiurlwidth=${width}&origin=*`;
 
   const imageResponse = await fetch(fileUrl, { cache: "force-cache" });
